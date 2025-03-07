@@ -30,6 +30,8 @@ ES7 tools as well
 npm install @react-navigation/native @react-navigation/stack npm install react-native-screens react-native-safe-area-context cd ios && pod install && cd ..
 
 9. Tutorials:
-https://www.youtube.com/watch?v=Hp9sTsiTZ_I - reactive native for begineers 
+https://www.youtube.com/watch?v=Hp9sTsiTZ_I - reactive native for begineers
+
 https://www.youtube.com/watch?v=1ETOJloLK3Y - create an app with react native 
+
 https://www.youtube.com/watch?v=czhLCGuu_AU - lesson 3 navigation https://www.youtube.com/watch?v=dUVuIJx-RYw - flatlisting
