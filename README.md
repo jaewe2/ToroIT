@@ -1,50 +1,27 @@
-# Welcome to your Expo app 👋
+Framework Utilized: React Native (expo tool as well) for Apps
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Download Node.js https://nodejs.org/en
 
-## Get started
+Download for android app simulator: https://developer.android.com/studio?gad_source=1&gclid=CjwKCAiAiaC-BhBEEiwAjY99qFTDhwjDzDvKSRxfImgqSAaoiw3MmvQTMC9a7LRUWSLPxCXoZXSekBoCJEEQAvD_BwE&gclsrc=aw.ds
 
-1. Install dependencies
+Download for iOS app simulator: https://apps.apple.com/us/app/xcode/id497799835?mt=12/
 
-   ```bash
-   npm install
-   ```
+Visual Studio Code Open Folder:
 
-2. Start the app
+toroapp
 
-   ```bash
-    npx expo start
-   ```
+start the server/simulator
+npx expo start
 
-In the output, you'll find options to open the app in a
+Reference: https://docs.expo.dev/get-started/start-developing/
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+Join the localhost:
+This will be in the terminal (gives ideas of like -a for android studio)
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+Optional Sytlization for better looking code (indentation corrections, dark/night themes, coloration of code: Prettier - formats your code for you React Native Tools - Microsoft GitLens - commit to GitHub JavaScript (ES6) - suggestion for code shortcuts like copilot Expo Tools
 
-## Get a fresh project
+multiscreen navigation (optional):
 
-When you're ready, run:
+npm install @react-navigation/native @react-navigation/stack npm install react-native-screens react-native-safe-area-context cd ios && pod install && cd ..
 
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Tutorials: https://www.youtube.com/watch?v=Hp9sTsiTZ_I - reactive native for begineers https://www.youtube.com/watch?v=1ETOJloLK3Y - create an app with react native https://www.youtube.com/watch?v=czhLCGuu_AU - lesson 3 navigation https://www.youtube.com/watch?v=dUVuIJx-RYw - flatlisting
