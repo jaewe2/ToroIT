@@ -1,80 +1,133 @@
-import { View, Text, StyleSheet, ImageBackground, Pressable } from 'react-native'
-import { Link } from 'expo-router'
+import React, { useState } from 'react';
+import {
+  StyleSheet,
+  Text,
+  View,
+  TextInput,
+  TouchableOpacity,
+  Alert,
+  ImageBackground,
+} from 'react-native';
+import { Link, router } from 'expo-router';
 
-import icedCoffeeImg from "@/assets/images/iced-coffee.png"
+export default function Login() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
-const app = () => {
+  const handleLogin = () => {
+    //regular vaidation
+    if (!email || !password) {
+      Alert.alert('Error', 'Please fill in all fields');
+      return;
+    }
+    // logic logic, just need blockchain authorization here.
+    Alert.alert('Success', `Logged in with ${email}`);
+    console.log('Email:', email, 'Password:', password);
+    // home page after this (main area of interest)
+    router.replace('/home');
+  };
+
   return (
     <View style={styles.container}>
+      {/* Maroon background */}
       <ImageBackground
-        source={icedCoffeeImg}
+        source={{ uri: 'https://via.placeholder.com/400x800/800000/FFFFFF?text=Maroon+Background' }} // could fit the toro mascot here
         resizeMode="cover"
-        style={styles.image}
+        style={styles.background}
       >
-        <Text style={styles.title}>Coffee Shop</Text>
+        <View style={styles.content}>
+          <Text style={styles.title}>Welcome to Toro IT Support</Text>
 
-        <Link href="/menu" style={{ marginHorizontal: 'auto' }} asChild>
-          <Pressable style={styles.button}>
-            <Text style={styles.buttonText}>Our Menu</Text>
-          </Pressable>
-        </Link>
+          <TextInput
+            style={styles.input}
+            placeholder="Email or Username"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            placeholderTextColor="#666"
+          />
 
-        <Link href="/contact" style={{ marginHorizontal: 'auto' }} asChild>
-          <Pressable style={styles.button}>
-            <Text style={styles.buttonText}>Contact Us</Text>
-          </Pressable>
-        </Link>
+          <TextInput
+            style={styles.input}
+            placeholder="Password"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+            autoCapitalize="none"
+            placeholderTextColor="#666"
+          />
 
+          <TouchableOpacity style={styles.button} onPress={handleLogin}>
+            <Text style={styles.buttonText}>Login</Text>
+          </TouchableOpacity>
+
+          <Link href="/home" style={styles.skipLink}>
+            <Text style={styles.skipText}>Skip to next page for now</Text>
+          </Link>
+        </View>
       </ImageBackground>
     </View>
-  )
+  );
 }
-
-export default app
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    flexDirection: 'column',
   },
-  image: {
+  background: {
+    flex: 1,
     width: '100%',
     height: '100%',
-    flex: 1,
-    resizeMode: 'cover',
     justifyContent: 'center',
+    alignItems: 'center',
+  },
+  content: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)', //white overlay
+    margin: 20,
+    borderRadius: 10,
+    width: '80%', 
   },
   title: {
-    color: 'white',
-    fontSize: 42,
+    fontSize: 28,
     fontWeight: 'bold',
+    marginBottom: 30,
+    color: '#800000', // Maroon color title
     textAlign: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    marginBottom: 120,
   },
-  link: {
-    color: 'white',
-    fontSize: 42,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    textDecorationLine: 'underline',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    padding: 4,
+  input: {
+    width: '100%',
+    height: 50,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    paddingHorizontal: 15,
+    marginBottom: 20,
+    borderWidth: 2,
+    borderColor: '#DAA520', // gold border to match Toro theme
+    color: '#333',
   },
   button: {
-    height: 60,
-    width: 150,
-    borderRadius: 20,
+    width: '100%',
+    height: 50,
+    backgroundColor: '#800000', //maroon buttons
+    borderRadius: 8,
     justifyContent: 'center',
-    backgroundColor: 'rgba(0,0,0,0.75)',
-    padding: 6,
-    marginBottom: 50,
+    alignItems: 'center',
+    marginBottom: 20,
   },
   buttonText: {
-    color: 'white',
-    fontSize: 16,
+    color: '#fff',
+    fontSize: 18,
     fontWeight: 'bold',
-    textAlign: 'center',
-    padding: 4,
-  }
-})
+  },
+  skipLink: {
+    marginTop: 10,
+  },
+  skipText: {
+    color: '#800000', //skip text is maroon for now (authenication not implemented yet)
+    fontSize: 16,
+  },
+});
