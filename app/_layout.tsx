@@ -1,39 +1,84 @@
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
-import { Appearance } from 'react-native';
-
-import { Colors } from '@/constants/Colors';
-
-// Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync();
+// app/_layout.tsx
+import { Tabs } from 'expo-router';
+import { FontAwesome, Ionicons } from '@expo/vector-icons';
+import { AuthProvider } from './auth-context';
 
 export default function RootLayout() {
-  const colorScheme = Appearance.getColorScheme()
-
-  const theme = colorScheme === 'dark' ? Colors.dark : Colors.light;
-
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
-
-  useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
-
-  if (!loaded) {
-    return null;
-  }
-
   return (
-    <Stack screenOptions={{ headerStyle: { backgroundColor: theme.headerBackground }, headerTintColor: theme.text, headerShadowVisible: false }}>
-      <Stack.Screen name="index" options={{ headerShown: false, title: 'Home' }} />
-      <Stack.Screen name="menu" options={{ headerShown: true, title: 'Menu', headerTitle: 'Coffee Shop Menu' }} />
-      <Stack.Screen name="contact" options={{ headerShown: true, title: 'Contact', headerTitle: 'Contact Us' }} />
-      <Stack.Screen name="+not-found" options={{ headerShown: false }} />
-    </Stack>
+    <AuthProvider>
+      <Tabs
+        initialRouteName="index"
+        screenOptions={{
+          tabBarActiveTintColor: 'tomato',
+          tabBarInactiveTintColor: 'gray',
+        }}
+      >
+        <Tabs.Screen
+          name="index"
+          options={{
+            title: 'Login',
+            tabBarIcon: ({ color, size }) => (
+              <FontAwesome name="sign-in" size={size} color={color} />
+            ),
+            tabBarStyle: { display: 'none' },
+          }}
+        />
+        <Tabs.Screen
+          name="register"
+          options={{
+            title: 'Register',
+            tabBarIcon: ({ color, size }) => (
+              <FontAwesome name="user-plus" size={size} color={color} />
+            ),
+            tabBarStyle: { display: 'none' },
+          }}
+        />
+        <Tabs.Screen
+          name="home"
+          options={{
+            title: 'Home',
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name="home" size={size} color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="chatbot"
+          options={{
+            title: 'Chatbot',
+            tabBarIcon: ({ color, size }) => (
+              <FontAwesome name="comments" size={size} color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="contact"
+          options={{
+            title: 'Contact',
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name="call" size={size} color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="account"
+          options={{
+            title: 'Account',
+            tabBarIcon: ({ color, size }) => (
+              <FontAwesome name="user" size={size} color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="orders"
+          options={{
+            title: 'Orders',
+            tabBarIcon: ({ color, size }) => (
+              <FontAwesome name="list" size={size} color={color} />
+            ),
+          }}
+        />
+      </Tabs>
+    </AuthProvider>
   );
 }

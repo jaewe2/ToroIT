@@ -1,64 +1,28 @@
+// app/index.jsx
 import React from 'react';
-import {
-  StyleSheet,
-  Text,
-  View,
-  TextInput,
-  TouchableOpacity,
-  Alert,
-  ImageBackground,
-  Image,
-} from 'react-native';
-import { Link, router } from 'expo-router';
+import { StyleSheet, View, Text, TextInput, TouchableOpacity, ActivityIndicator, Image } from 'react-native';
+import { Link } from 'expo-router';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
+import { Colors } from '../constants/Colors';
+import { useAuth } from './auth-context';
 
-// yup validation
 const LoginSchema = Yup.object().shape({
-  email: Yup.string()
-    .email('Invalid email')
-    .required('Email is required'),
+  email: Yup.string().email('Invalid email').required('Email is required'),
   password: Yup.string()
     .min(6, 'Password must be at least 6 characters')
     .required('Password is required'),
 });
 
 export default function Login() {
-  // blochchain authenication layer later.. added here...
-  const handleBlockchainLogin = async (values) => {
-    console.log('Blockchain login to be implemented:', values);
-    return true; // just make it work for now.
-  };
-
-  const handleLogin = async (values, { setSubmitting }) => {
-    try {
-      const blockchainSuccess = await handleBlockchainLogin(values);
-      if (!blockchainSuccess) {
-        Alert.alert('Error', 'Blockchain authentication failed');
-        return;
-      }
-
-      Alert.alert('Success', `Logged in with ${values.email}`);
-      console.log('Email:', values.email, 'Password:', values.password);
-      router.replace('/home');
-    } catch (error) {
-      Alert.alert('Error', 'Failed to log in: ' + error.message);
-    } finally {
-      setSubmitting(false);
-    }
-  };
+  const { login } = useAuth();
 
   return (
     <View style={styles.container}>
-      <ImageBackground
-        source={{ uri: 'https://via.placeholder.com/400x800/800000/FFFFFF?text=Maroon+Background' }}
-        resizeMode="cover"
-        style={styles.background}
-      >
+      <View style={styles.background}>
         <View style={styles.content}>
-          {/* Toro mascot image above the title */}
           <Image
-            source={require('../assets/images/toro-mascot.png')} /d
+            source={require('../assets/images/toro-mascot.png')}
             style={styles.mascotImage}
             resizeMode="contain"
           />
@@ -67,45 +31,67 @@ export default function Login() {
           <Formik
             initialValues={{ email: '', password: '' }}
             validationSchema={LoginSchema}
-            onSubmit={handleLogin}
+            onSubmit={(values, { setSubmitting }) => login(values, { setSubmitting })}
           >
-            {({ handleChange, handleBlur, handleSubmit, values, errors, touched, isSubmitting }) => (
+            {({
+              handleChange,
+              handleBlur,
+              handleSubmit,
+              values,
+              errors,
+              touched,
+              isSubmitting,
+            }) => (
               <>
-                <TextInput
-                  style={[styles.input, touched.email && errors.email && styles.errorInput]}
-                  placeholder="Email or Username"
-                  value={values.email}
-                  onChangeText={handleChange('email')}
-                  onBlur={handleBlur('email')}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  placeholderTextColor="#666"
-                />
-                {touched.email && errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
+                <View style={styles.inputContainer}>
+                  <Text style={styles.label}>Email or Username</Text>
+                  <TextInput
+                    style={[styles.input, touched.email && errors.email && styles.inputError]}
+                    placeholder="Email or Username"
+                    value={values.email}
+                    onChangeText={handleChange('email')}
+                    onBlur={handleBlur('email')}
+                    keyboardType="email-address"
+                    accessibilityLabel="Email input"
+                  />
+                  {touched.email && errors.email && (
+                    <Text style={styles.errorText}>{errors.email}</Text>
+                  )}
+                </View>
 
-                <TextInput
-                  style={[styles.input, touched.password && errors.password && styles.errorInput]}
-                  placeholder="Password"
-                  value={values.password}
-                  onChangeText={handleChange('password')}
-                  onBlur={handleBlur('password')}
-                  secureTextEntry
-                  autoCapitalize="none"
-                  placeholderTextColor="#666"
-                />
-                {touched.password && errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
+                <View style={styles.inputContainer}>
+                  <Text style={styles.label}>Password</Text>
+                  <TextInput
+                    style={[styles.input, touched.password && errors.password && styles.inputError]}
+                    placeholder="Password"
+                    value={values.password}
+                    onChangeText={handleChange('password')}
+                    onBlur={handleBlur('password')}
+                    secureTextEntry
+                    accessibilityLabel="Password input"
+                  />
+                  {touched.password && errors.password && (
+                    <Text style={styles.errorText}>{errors.password}</Text>
+                  )}
+                </View>
 
                 <TouchableOpacity
                   style={[styles.button, isSubmitting && styles.buttonDisabled]}
                   onPress={handleSubmit}
                   disabled={isSubmitting}
+                  accessibilityLabel="Login button"
                 >
-                  <Text style={styles.buttonText}>Login</Text>
+                  {isSubmitting ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <Text style={styles.buttonText}>Login</Text>
+                  )}
                 </TouchableOpacity>
 
                 <Link href="/home" style={styles.skipLink}>
                   <Text style={styles.skipText}>Skip to next page for now</Text>
                 </Link>
+
                 <Link href="/register" style={styles.skipLink}>
                   <Text style={styles.skipText}>Need an account? Register</Text>
                 </Link>
@@ -113,7 +99,7 @@ export default function Login() {
             )}
           </Formik>
         </View>
-      </ImageBackground>
+      </View>
     </View>
   );
 }
@@ -128,27 +114,37 @@ const styles = StyleSheet.create({
     height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: Colors.light.primary,
   },
   content: {
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)', // White overlay
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
     margin: 20,
     borderRadius: 10,
     width: '80%',
   },
   mascotImage: {
-    width: 150, 
+    width: 150,
     height: 150,
-    marginBottom: 20, 
+    marginBottom: 20,
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
     marginBottom: 30,
-    color: '#800000', // Maroon color title
+    color: Colors.light.primary,
     textAlign: 'center',
+  },
+  inputContainer: {
+    width: '100%',
+    marginBottom: 15,
+  },
+  label: {
+    fontSize: 16,
+    marginBottom: 5,
+    color: '#333',
   },
   input: {
     width: '100%',
@@ -156,31 +152,30 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 8,
     paddingHorizontal: 15,
-    marginBottom: 10,
     borderWidth: 2,
-    borderColor: '#DAA520', // Gold border to match Toro theme
+    borderColor: Colors.light.secondary,
     color: '#333',
   },
-  errorInput: {
-    borderColor: '#ff0000', // Red border for errors
+  inputError: {
+    borderColor: '#ff0000',
   },
   errorText: {
     color: '#ff0000',
     fontSize: 12,
-    marginBottom: 10,
+    marginTop: 5,
     textAlign: 'center',
   },
   button: {
     width: '100%',
     height: 50,
-    backgroundColor: '#800000', // Maroon buttons
+    backgroundColor: Colors.light.primary,
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
   },
   buttonDisabled: {
-    backgroundColor: '#b36666', // Lighter maroon when disabled
+    backgroundColor: '#b36666',
     opacity: 0.7,
   },
   buttonText: {
@@ -192,7 +187,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   skipText: {
-    color: '#800000', // Skip text is maroon
+    color: Colors.light.primary,
     fontSize: 16,
   },
 });

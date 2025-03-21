@@ -1,18 +1,12 @@
+// app/register.jsx
 import React, { useState } from 'react';
-import {
-  StyleSheet,
-  Text,
-  View,
-  TextInput,
-  TouchableOpacity,
-  Alert,
-  ImageBackground,
-} from 'react-native';
-import { Link, router } from 'expo-router';
+import { StyleSheet, View, Text, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { Link } from 'expo-router';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
+import { Colors } from '../constants/Colors';
+import { useAuth } from './auth-context';
 
-// yup validation form
 const RegisterSchema = Yup.object().shape({
   email: Yup.string()
     .email('Invalid email')
@@ -27,135 +21,133 @@ const RegisterSchema = Yup.object().shape({
 });
 
 export default function Register() {
+  const { register } = useAuth();
   const [fetchedUsername, setFetchedUsername] = useState('');
   const [usernameError, setUsernameError] = useState('');
 
-  //4 chars of the prefix for username
   const deriveUsernameFromEmail = (email) => {
     try {
       const prefix = email.split('@')[0];
       const username = prefix.length > 4 ? prefix.substring(0, 4) : prefix;
-      setFetchedUsername(username);
-      setUsernameError('');
+      return { username, error: null };
     } catch (error) {
-      setFetchedUsername('');
-      setUsernameError('Error deriving username: ' + error.message);
+      return { username: '', error: 'Error deriving username: ' + error.message };
     }
   };
 
-  // email change and deriving username
   const handleEmailChange = (email, setFieldValue) => {
     setFieldValue('email', email);
     if (email && email.endsWith('@toromail.csudh.edu')) {
-      deriveUsernameFromEmail(email);
+      const { username, error } = deriveUsernameFromEmail(email);
+      setFetchedUsername(username);
+      setUsernameError(error || '');
     } else {
       setFetchedUsername('');
       setUsernameError('');
     }
   };
 
-  // registeration logic later
-  const handleRegister = async (values, { setSubmitting }) => {
-    try {
-      if (!fetchedUsername) {
-        Alert.alert('Error', 'Username could not be derived. Please try again.');
-        return;
-      }
-
-      
-      const registrationData = {
-        email: values.email,
-        username: fetchedUsername,
-        password: values.password,
-      };
-      console.log('Registration data:', registrationData);
-      Alert.alert('Success', 'Registration successful! Please log in.');
-      router.replace('/'); // back to login page
-    } catch (error) {
-      Alert.alert('Error', 'Registration failed: ' + error.message);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
   return (
     <View style={styles.container}>
-      <ImageBackground
-        source={{ uri: 'https://via.placeholder.com/400x800/800000/FFFFFF?text=Maroon+Background' }}
-        resizeMode="cover"
-        style={styles.background}
-      >
+      <View style={styles.background}>
         <View style={styles.content}>
           <Text style={styles.title}>Register for Toro IT Support</Text>
 
           <Formik
             initialValues={{ email: '', password: '', confirmPassword: '' }}
             validationSchema={RegisterSchema}
-            onSubmit={handleRegister}
+            onSubmit={(values, { setSubmitting }) =>
+              register(values, fetchedUsername, { setSubmitting })
+            }
           >
-            {({ handleChange, handleBlur, handleSubmit, values, errors, touched, setFieldValue, isSubmitting }) => (
+            {({
+              handleChange,
+              handleBlur,
+              handleSubmit,
+              values,
+              errors,
+              touched,
+              setFieldValue,
+              isSubmitting,
+            }) => (
               <>
-                <TextInput
-                  style={[styles.input, touched.email && (errors.email || usernameError) && styles.errorInput]}
-                  placeholder="Email (must be @toromail.csudh.edu)"
-                  value={values.email}
-                  onChangeText={(text) => handleEmailChange(text, setFieldValue)}
-                  onBlur={handleBlur('email')}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  placeholderTextColor="#666"
-                />
-                {touched.email && errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
-                {usernameError && <Text style={styles.errorText}>{usernameError}</Text>}
+                <View style={styles.inputContainer}>
+                  <Text style={styles.label}>Email (must be @toromail.csudh.edu)</Text>
+                  <TextInput
+                    style={[styles.input, (touched.email && (errors.email || usernameError)) && styles.inputError]}
+                    placeholder="Email (must be @toromail.csudh.edu)"
+                    value={values.email}
+                    onChangeText={(text) => handleEmailChange(text, setFieldValue)}
+                    onBlur={handleBlur('email')}
+                    keyboardType="email-address"
+                    accessibilityLabel="Email input"
+                  />
+                  {touched.email && errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
+                  {usernameError && <Text style={styles.errorText}>{usernameError}</Text>}
+                </View>
 
-                <TextInput
-                  style={[styles.input, styles.disabledInput]}
-                  placeholder="Username (auto-filled)"
-                  value={fetchedUsername}
-                  editable={false}
-                  placeholderTextColor="#666"
-                />
+                <View style={styles.inputContainer}>
+                  <Text style={styles.label}>Username (auto-filled)</Text>
+                  <TextInput
+                    style={[styles.input, usernameError && styles.inputError]}
+                    placeholder="Username (auto-filled)"
+                    value={fetchedUsername}
+                    editable={false}
+                    accessibilityLabel="Username (auto-filled)"
+                  />
+                </View>
 
-                <TextInput
-                  style={[styles.input, touched.password && errors.password && styles.errorInput]}
-                  placeholder="Password"
-                  value={values.password}
-                  onChangeText={handleChange('password')}
-                  onBlur={handleBlur('password')}
-                  secureTextEntry
-                  autoCapitalize="none"
-                  placeholderTextColor="#666"
-                />
-                {touched.password && errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
+                <View style={styles.inputContainer}>
+                  <Text style={styles.label}>Password</Text>
+                  <TextInput
+                    style={[styles.input, touched.password && errors.password && styles.inputError]}
+                    placeholder="Password"
+                    value={values.password}
+                    onChangeText={handleChange('password')}
+                    onBlur={handleBlur('password')}
+                    secureTextEntry
+                    accessibilityLabel="Password input"
+                  />
+                  {touched.password && errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
+                </View>
 
-                <TextInput
-                  style={[styles.input, touched.confirmPassword && errors.confirmPassword && styles.errorInput]}
-                  placeholder="Confirm Password"
-                  value={values.confirmPassword}
-                  onChangeText={handleChange('confirmPassword')}
-                  onBlur={handleBlur('confirmPassword')}
-                  secureTextEntry
-                  autoCapitalize="none"
-                  placeholderTextColor="#666"
-                />
-                {touched.confirmPassword && errors.confirmPassword && <Text style={styles.errorText}>{errors.confirmPassword}</Text>}
+                <View style={styles.inputContainer}>
+                  <Text style={styles.label}>Confirm Password</Text>
+                  <TextInput
+                    style={[styles.input, touched.confirmPassword && errors.confirmPassword && styles.inputError]}
+                    placeholder="Confirm Password"
+                    value={values.confirmPassword}
+                    onChangeText={handleChange('confirmPassword')}
+                    onBlur={handleBlur('confirmPassword')}
+                    secureTextEntry
+                    accessibilityLabel="Confirm password input"
+                  />
+                  {touched.confirmPassword && errors.confirmPassword && (
+                    <Text style={styles.errorText}>{errors.confirmPassword}</Text>
+                  )}
+                </View>
 
                 <TouchableOpacity
                   style={[styles.button, isSubmitting && styles.buttonDisabled]}
                   onPress={handleSubmit}
                   disabled={isSubmitting}
+                  accessibilityLabel="Register button"
                 >
-                  <Text style={styles.buttonText}>Register</Text>
+                  {isSubmitting ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <Text style={styles.buttonText}>Register</Text>
+                  )}
                 </TouchableOpacity>
 
-                <Link href="/" style={styles.skipLink}>
+                <Link href="/index" style={styles.skipLink}>
                   <Text style={styles.skipText}>Back to Login</Text>
                 </Link>
               </>
             )}
           </Formik>
         </View>
-      </ImageBackground>
+      </View>
     </View>
   );
 }
@@ -170,12 +162,13 @@ const styles = StyleSheet.create({
     height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: Colors.light.primary,
   },
   content: {
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)', // White overlay
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
     margin: 20,
     borderRadius: 10,
     width: '80%',
@@ -184,8 +177,17 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: 'bold',
     marginBottom: 30,
-    color: '#800000', // Maroon color title
+    color: Colors.light.primary,
     textAlign: 'center',
+  },
+  inputContainer: {
+    width: '100%',
+    marginBottom: 15,
+  },
+  label: {
+    fontSize: 16,
+    marginBottom: 5,
+    color: '#333',
   },
   input: {
     width: '100%',
@@ -193,35 +195,30 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 8,
     paddingHorizontal: 15,
-    marginBottom: 10,
     borderWidth: 2,
-    borderColor: '#DAA520', // Gold border to match Toro theme
+    borderColor: Colors.light.secondary,
     color: '#333',
   },
-  disabledInput: {
-    backgroundColor: '#f0f0f0', // Light gray to indicate it's disabled
-    color: '#666',
-  },
-  errorInput: {
-    borderColor: '#ff0000', // Red border for errors
+  inputError: {
+    borderColor: '#ff0000',
   },
   errorText: {
     color: '#ff0000',
     fontSize: 12,
-    marginBottom: 10,
+    marginTop: 5,
     textAlign: 'center',
   },
   button: {
     width: '100%',
     height: 50,
-    backgroundColor: '#800000', // Maroon buttons
+    backgroundColor: Colors.light.primary,
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
   },
   buttonDisabled: {
-    backgroundColor: '#b36666', // Lighter maroon when disabled
+    backgroundColor: '#b36666',
     opacity: 0.7,
   },
   buttonText: {
@@ -233,7 +230,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   skipText: {
-    color: '#800000', // Skip text is maroon
+    color: Colors.light.primary,
     fontSize: 16,
   },
 });
