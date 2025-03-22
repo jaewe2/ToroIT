@@ -41,3 +41,34 @@ https://www.youtube.com/watch?v=Hp9sTsiTZ_I - reactive native for begineers
 https://www.youtube.com/watch?v=1ETOJloLK3Y - create an app with react native 
 
 https://www.youtube.com/watch?v=czhLCGuu_AU - lesson 3 navigation https://www.youtube.com/watch?v=dUVuIJx-RYw - flatlisting
+
+12. all dependencies we need so far:
+
+# Core Expo and React Native dependencies (likely already installed)
+npx expo install expo react react-native expo-router
+
+# Navigation dependencies
+npx expo install react-native-gesture-handler
+
+# Chatbot dependencies
+npm install react-native-gifted-chat axios
+npx expo install expo-constants
+
+# UI and icon dependencies
+npx expo install @expo/vector-icons expo-image
+
+# Form and validation dependencies
+npm install formik yup
+
+# Optional: For environment variables (if using a .env file)
+npm install dotenv
+
+# Optional: Development dependencies (if needed for transpiling)
+npm install --save-dev @babel/core @babel/preset-env
+
+# Optional: Install Expo CLI globally (if not already installed)
+npm install -g expo-cli
+
+# Optional: Clean up unused dependencies (e.g., bad-words)
+npm uninstall bad-words
+npm prune
