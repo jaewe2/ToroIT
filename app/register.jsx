@@ -1,7 +1,7 @@
 // app/register.jsx
 import React, { useState } from 'react';
 import { StyleSheet, View, Text, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { Link } from 'expo-router';
+import { router } from 'expo-router'; // Import router
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 import { Colors } from '../constants/Colors';
@@ -140,9 +140,13 @@ export default function Register() {
                   )}
                 </TouchableOpacity>
 
-                <Link href="/index" style={styles.skipLink}>
+                <TouchableOpacity
+                  onPress={() => router.replace('/index')}
+                  style={styles.skipLink}
+                  accessibilityLabel="Back to Login"
+                >
                   <Text style={styles.skipText}>Back to Login</Text>
-                </Link>
+                </TouchableOpacity>
               </>
             )}
           </Formik>

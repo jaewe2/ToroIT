@@ -1,4 +1,4 @@
-// app/(tabs)/home.jsx
+// app/home.jsx
 import React from 'react';
 import { View, Text, StyleSheet, ImageBackground } from 'react-native';
 import { Link } from 'expo-router';

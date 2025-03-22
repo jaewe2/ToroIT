@@ -1,16 +1,23 @@
-// app/_layout.tsx
+// app/_layout.jsx
 import { Tabs } from 'expo-router';
 import { FontAwesome, Ionicons } from '@expo/vector-icons';
 import { AuthProvider } from './auth-context';
 
 export default function RootLayout() {
+  const maroon = '#800000';
+  const gold = '#DAA520';
+
   return (
     <AuthProvider>
       <Tabs
         initialRouteName="index"
         screenOptions={{
-          tabBarActiveTintColor: 'tomato',
-          tabBarInactiveTintColor: 'gray',
+          headerStyle: { backgroundColor: maroon },
+          headerTintColor: '#fff',
+          tabBarStyle: { backgroundColor: maroon },
+          tabBarActiveTintColor: gold,
+          tabBarInactiveTintColor: '#fff',
+          tabBarShowLabel: false,
         }}
       >
         <Tabs.Screen
@@ -39,6 +46,15 @@ export default function RootLayout() {
             title: 'Home',
             tabBarIcon: ({ color, size }) => (
               <Ionicons name="home" size={size} color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="menu"
+          options={{
+            title: 'Menu',
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name="restaurant" size={size} color={color} />
             ),
           }}
         />

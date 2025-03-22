@@ -1,7 +1,9 @@
 // app/account.jsx
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { useAuth } from './auth-context'; // Reverted from '../auth-context'
+import { Ionicons } from '@expo/vector-icons'; // For the right arrow icon
+import { useAuth } from './auth-context';
+import { Colors } from '../constants/Colors'; // Assuming Colors.light.primary is maroon (#800000)
 
 export default function Account() {
   const { user, logout } = useAuth();
@@ -20,11 +22,12 @@ export default function Account() {
             <Text style={styles.info}>{user.username}</Text>
           </View>
           <TouchableOpacity
-            style={styles.button}
+            style={styles.logoutContainer}
             onPress={logout}
             accessibilityLabel="Log out"
           >
-            <Text style={styles.buttonText}>Log Out</Text>
+            <Text style={styles.logoutText}>Logout</Text>
+            <Ionicons name="chevron-forward" size={24} color="#666" />
           </TouchableOpacity>
         </>
       ) : (
@@ -46,6 +49,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 30,
+    color: Colors.light.primary, // Maroon (#800000)
   },
   infoContainer: {
     marginBottom: 20,
@@ -65,18 +69,18 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#333',
   },
-  button: {
-    width: '100%',
-    height: 50,
-    backgroundColor: '#800000',
-    borderRadius: 8,
-    justifyContent: 'center',
+  logoutContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 20,
+    paddingVertical: 15,
+    paddingHorizontal: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
+    marginTop: 10,
   },
-  buttonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
+  logoutText: {
+    fontSize: 16,
+    color: Colors.light.primary, // Maroon (#800000) to match Toro theme
   },
 });

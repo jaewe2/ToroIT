@@ -1,5 +1,5 @@
 // app/auth-context.jsx
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import { Alert } from 'react-native';
 import { router } from 'expo-router';
 
@@ -9,12 +9,6 @@ export function AuthProvider({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      router.replace('/home');
-    }
-  }, [isAuthenticated]);
-
   const login = async (values, { setSubmitting }) => {
     try {
       // Placeholder for blockchain login
@@ -22,6 +16,7 @@ export function AuthProvider({ children }) {
       Alert.alert('Success', `Logged in with ${values.email}`);
       setUser({ email: values.email, username: 'user' }); // Mock username for now
       setIsAuthenticated(true);
+      router.replace('/home'); // Navigate after state updates
       return true;
     } catch (error) {
       Alert.alert('Error', 'Failed to log in: ' + error.message);
@@ -42,6 +37,7 @@ export function AuthProvider({ children }) {
       Alert.alert('Success', 'Registration successful! Redirecting to Home.');
       setUser({ email: values.email, username });
       setIsAuthenticated(true);
+      router.replace('/home'); // Navigate after state updates
       return true;
     } catch (error) {
       Alert.alert('Error', 'Registration failed: ' + error.message);
