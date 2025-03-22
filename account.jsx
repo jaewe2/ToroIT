@@ -1,0 +1,86 @@
+// app/account.jsx
+import React from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons'; // For the right arrow icon
+import { useAuth } from './auth-context';
+import { Colors } from '../constants/Colors'; // Assuming Colors.light.primary is maroon (#800000)
+
+export default function Account() {
+  const { user, logout } = useAuth();
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Account</Text>
+      {user ? (
+        <>
+          <View style={styles.infoContainer}>
+            <Text style={styles.label}>Email:</Text>
+            <Text style={styles.info}>{user.email}</Text>
+          </View>
+          <View style={styles.infoContainer}>
+            <Text style={styles.label}>Username:</Text>
+            <Text style={styles.info}>{user.username}</Text>
+          </View>
+          <TouchableOpacity
+            style={styles.logoutContainer}
+            onPress={logout}
+            accessibilityLabel="Log out"
+          >
+            <Text style={styles.logoutText}>Logout</Text>
+            <Ionicons name="chevron-forward" size={24} color="#666" />
+          </TouchableOpacity>
+        </>
+      ) : (
+        <Text style={styles.text}>Not logged in.</Text>
+      )}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 20,
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 30,
+    color: Colors.light.primary, // Maroon (#800000)
+  },
+  infoContainer: {
+    marginBottom: 20,
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  info: {
+    fontSize: 16,
+    marginTop: 5,
+    color: '#333',
+  },
+  text: {
+    fontSize: 18,
+    textAlign: 'center',
+    color: '#333',
+  },
+  logoutContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 15,
+    paddingHorizontal: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
+    marginTop: 10,
+  },
+  logoutText: {
+    fontSize: 16,
+    color: Colors.light.primary, // Maroon (#800000) to match Toro theme
+  },
+});
