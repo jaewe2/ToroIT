@@ -1,10 +1,18 @@
 // app/index.jsx
 import React from 'react';
-import { StyleSheet, View, Text, TextInput, TouchableOpacity, ActivityIndicator, Image } from 'react-native';
+import {
+  StyleSheet,
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  ActivityIndicator,
+  Image,
+} from 'react-native';
 import { Link } from 'expo-router';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
-import { Colors } from '../constants/Colors';
+import { Colors } from '@/constants/Colors';
 import { useAuth } from './auth-context';
 
 const LoginSchema = Yup.object().shape({
@@ -46,7 +54,10 @@ export default function Login() {
                 <View style={styles.inputContainer}>
                   <Text style={styles.label}>Email or Username</Text>
                   <TextInput
-                    style={[styles.input, touched.email && errors.email && styles.inputError]}
+                    style={[
+                      styles.input,
+                      touched.email && errors.email && styles.inputError,
+                    ]}
                     placeholder="Email or Username"
                     value={values.email}
                     onChangeText={handleChange('email')}
@@ -62,7 +73,10 @@ export default function Login() {
                 <View style={styles.inputContainer}>
                   <Text style={styles.label}>Password</Text>
                   <TextInput
-                    style={[styles.input, touched.password && errors.password && styles.inputError]}
+                    style={[
+                      styles.input,
+                      touched.password && errors.password && styles.inputError,
+                    ]}
                     placeholder="Password"
                     value={values.password}
                     onChangeText={handleChange('password')}
@@ -111,7 +125,6 @@ const styles = StyleSheet.create({
   background: {
     flex: 1,
     width: '100%',
-    height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: Colors.light.primary,

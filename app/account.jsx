@@ -1,9 +1,9 @@
 // app/account.jsx
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons'; // For the right arrow icon
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from './auth-context';
-import { Colors } from '../constants/Colors'; // Assuming Colors.light.primary is maroon (#800000)
+import { Colors } from '@/constants/Colors'; // Updated to match alias usage elsewhere
 
 export default function Account() {
   const { user, logout } = useAuth();
@@ -49,7 +49,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 30,
-    color: Colors.light.primary, // Maroon (#800000)
+    color: Colors.light.primary,
   },
   infoContainer: {
     marginBottom: 20,
@@ -81,6 +81,6 @@ const styles = StyleSheet.create({
   },
   logoutText: {
     fontSize: 16,
-    color: Colors.light.primary, // Maroon (#800000) to match Toro theme
+    color: Colors.light.primary,
   },
 });

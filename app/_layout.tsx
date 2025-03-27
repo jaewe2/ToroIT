@@ -1,4 +1,4 @@
-// app/_layout.jsx
+
 import { Tabs } from 'expo-router';
 import { FontAwesome, Ionicons } from '@expo/vector-icons';
 import { AuthProvider } from './auth-context';
@@ -24,10 +24,12 @@ export default function RootLayout() {
           name="index"
           options={{
             title: 'Login',
+            headerShown: false,
+            tabBarStyle: { display: 'none' },
             tabBarIcon: ({ color, size }) => (
               <FontAwesome name="sign-in" size={size} color={color} />
             ),
-            tabBarStyle: { display: 'none' },
+            href: null,
           }}
         />
         <Tabs.Screen
@@ -38,6 +40,7 @@ export default function RootLayout() {
               <FontAwesome name="user-plus" size={size} color={color} />
             ),
             tabBarStyle: { display: 'none' },
+            href: null,
           }}
         />
         <Tabs.Screen
@@ -46,15 +49,6 @@ export default function RootLayout() {
             title: 'Home',
             tabBarIcon: ({ color, size }) => (
               <Ionicons name="home" size={size} color={color} />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="menu"
-          options={{
-            title: 'Menu',
-            tabBarIcon: ({ color, size }) => (
-              <Ionicons name="restaurant" size={size} color={color} />
             ),
           }}
         />
@@ -86,11 +80,20 @@ export default function RootLayout() {
           }}
         />
         <Tabs.Screen
-          name="orders"
+          name="tickets"
           options={{
-            title: 'Orders',
+            title: 'Tickets',
             tabBarIcon: ({ color, size }) => (
-              <FontAwesome name="list" size={size} color={color} />
+              <FontAwesome name="ticket" size={size} color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="knowledge-base"
+          options={{
+            title: 'Help',
+            tabBarIcon: ({ color, size }) => (
+              <FontAwesome name="book" size={size} color={color} />
             ),
           }}
         />

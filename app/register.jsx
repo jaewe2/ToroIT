@@ -1,10 +1,19 @@
+
+
 // app/register.jsx
 import React, { useState } from 'react';
-import { StyleSheet, View, Text, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { router } from 'expo-router'; // Import router
+import {
+  StyleSheet,
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  ActivityIndicator,
+} from 'react-native';
+import { router } from 'expo-router';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
-import { Colors } from '../constants/Colors';
+import { Colors } from '@/constants/Colors';
 import { useAuth } from './auth-context';
 
 const RegisterSchema = Yup.object().shape({
@@ -37,7 +46,7 @@ export default function Register() {
 
   const handleEmailChange = (email, setFieldValue) => {
     setFieldValue('email', email);
-    if (email && email.endsWith('@toromail.csudh.edu')) {
+    if (email.endsWith('@toromail.csudh.edu')) {
       const { username, error } = deriveUsernameFromEmail(email);
       setFetchedUsername(username);
       setUsernameError(error || '');
@@ -74,15 +83,20 @@ export default function Register() {
                 <View style={styles.inputContainer}>
                   <Text style={styles.label}>Email (must be @toromail.csudh.edu)</Text>
                   <TextInput
-                    style={[styles.input, (touched.email && (errors.email || usernameError)) && styles.inputError]}
-                    placeholder="Email (must be @toromail.csudh.edu)"
+                    style={[
+                      styles.input,
+                      (touched.email && (errors.email || usernameError)) && styles.inputError,
+                    ]}
+                    placeholder="Email"
                     value={values.email}
                     onChangeText={(text) => handleEmailChange(text, setFieldValue)}
                     onBlur={handleBlur('email')}
                     keyboardType="email-address"
                     accessibilityLabel="Email input"
                   />
-                  {touched.email && errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
+                  {touched.email && errors.email && (
+                    <Text style={styles.errorText}>{errors.email}</Text>
+                  )}
                   {usernameError && <Text style={styles.errorText}>{usernameError}</Text>}
                 </View>
 
@@ -90,7 +104,7 @@ export default function Register() {
                   <Text style={styles.label}>Username (auto-filled)</Text>
                   <TextInput
                     style={[styles.input, usernameError && styles.inputError]}
-                    placeholder="Username (auto-filled)"
+                    placeholder="Username"
                     value={fetchedUsername}
                     editable={false}
                     accessibilityLabel="Username (auto-filled)"
@@ -100,7 +114,10 @@ export default function Register() {
                 <View style={styles.inputContainer}>
                   <Text style={styles.label}>Password</Text>
                   <TextInput
-                    style={[styles.input, touched.password && errors.password && styles.inputError]}
+                    style={[
+                      styles.input,
+                      touched.password && errors.password && styles.inputError,
+                    ]}
                     placeholder="Password"
                     value={values.password}
                     onChangeText={handleChange('password')}
@@ -108,13 +125,18 @@ export default function Register() {
                     secureTextEntry
                     accessibilityLabel="Password input"
                   />
-                  {touched.password && errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
+                  {touched.password && errors.password && (
+                    <Text style={styles.errorText}>{errors.password}</Text>
+                  )}
                 </View>
 
                 <View style={styles.inputContainer}>
                   <Text style={styles.label}>Confirm Password</Text>
                   <TextInput
-                    style={[styles.input, touched.confirmPassword && errors.confirmPassword && styles.inputError]}
+                    style={[
+                      styles.input,
+                      touched.confirmPassword && errors.confirmPassword && styles.inputError,
+                    ]}
                     placeholder="Confirm Password"
                     value={values.confirmPassword}
                     onChangeText={handleChange('confirmPassword')}
@@ -141,7 +163,7 @@ export default function Register() {
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  onPress={() => router.replace('/index')}
+                  onPress={() => router.replace('/')}
                   style={styles.skipLink}
                   accessibilityLabel="Back to Login"
                 >
@@ -163,7 +185,6 @@ const styles = StyleSheet.create({
   background: {
     flex: 1,
     width: '100%',
-    height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: Colors.light.primary,
