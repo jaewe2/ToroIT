@@ -72,3 +72,8 @@ npm install -g expo-cli
 # Optional: Clean up unused dependencies (e.g., bad-words)
 npm uninstall bad-words
 npm prune
+
+
+#needed for flash screens:
+
+npx expo install expo expo-font expo-linking expo-splash-screen expo-status-bar expo-system-ui expo-web-browser react react-dom react-native react-native-gesture-handler react-native-reanimated react-native-safe-area-context react-native-screens react-native-web @types/react jest-expo
