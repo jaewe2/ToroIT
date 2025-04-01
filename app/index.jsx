@@ -1,4 +1,4 @@
-// app/index.jsx
+// index.jsx (Login Page with UI/UX polish)
 import React from 'react';
 import {
   StyleSheet,
@@ -54,15 +54,14 @@ export default function Login() {
                 <View style={styles.inputContainer}>
                   <Text style={styles.label}>Email or Username</Text>
                   <TextInput
-                    style={[
-                      styles.input,
-                      touched.email && errors.email && styles.inputError,
-                    ]}
-                    placeholder="Email or Username"
+                    style={[styles.input, touched.email && errors.email && styles.inputError]}
+                    placeholder="Enter your email or username"
+                    placeholderTextColor="#999"
                     value={values.email}
                     onChangeText={handleChange('email')}
                     onBlur={handleBlur('email')}
                     keyboardType="email-address"
+                    autoCapitalize="none"
                     accessibilityLabel="Email input"
                   />
                   {touched.email && errors.email && (
@@ -73,11 +72,9 @@ export default function Login() {
                 <View style={styles.inputContainer}>
                   <Text style={styles.label}>Password</Text>
                   <TextInput
-                    style={[
-                      styles.input,
-                      touched.password && errors.password && styles.inputError,
-                    ]}
-                    placeholder="Password"
+                    style={[styles.input, touched.password && errors.password && styles.inputError]}
+                    placeholder="Enter your password"
+                    placeholderTextColor="#999"
                     value={values.password}
                     onChangeText={handleChange('password')}
                     onBlur={handleBlur('password')}
@@ -88,6 +85,10 @@ export default function Login() {
                     <Text style={styles.errorText}>{errors.password}</Text>
                   )}
                 </View>
+
+                <Link href="/register" style={styles.registerLink} accessibilityLabel="Go to Register">
+                  <Text style={styles.registerText}>Need an account? Register</Text>
+                </Link>
 
                 <TouchableOpacity
                   style={[styles.button, isSubmitting && styles.buttonDisabled]}
@@ -102,12 +103,8 @@ export default function Login() {
                   )}
                 </TouchableOpacity>
 
-                <Link href="/home" style={styles.skipLink}>
-                  <Text style={styles.skipText}>Skip to next page for now</Text>
-                </Link>
-
-                <Link href="/register" style={styles.skipLink}>
-                  <Text style={styles.skipText}>Need an account? Register</Text>
+                <Link href="/home" style={styles.skipLink} accessibilityLabel="Skip to Home">
+                  <Text style={styles.skipText}>Skip to Home Page</Text>
                 </Link>
               </>
             )}
@@ -119,9 +116,7 @@ export default function Login() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  container: { flex: 1 },
   background: {
     flex: 1,
     width: '100%',
@@ -133,20 +128,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    backgroundColor: '#ffffff',
     margin: 20,
     borderRadius: 10,
-    width: '80%',
+    width: '85%',
   },
   mascotImage: {
-    width: 150,
-    height: 150,
-    marginBottom: 20,
+    width: 100,
+    height: 100,
+    marginBottom: 10,
   },
   title: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: 'bold',
-    marginBottom: 30,
+    marginBottom: 25,
     color: Colors.light.primary,
     textAlign: 'center',
   },
@@ -195,6 +190,14 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  registerLink: {
+    marginBottom: 20,
+  },
+  registerText: {
+    color: Colors.light.primary,
+    fontSize: 16,
+    textAlign: 'center',
   },
   skipLink: {
     marginTop: 10,

@@ -1,5 +1,3 @@
-
-
 // app/register.jsx
 import React, { useState } from 'react';
 import {
@@ -88,10 +86,12 @@ export default function Register() {
                       (touched.email && (errors.email || usernameError)) && styles.inputError,
                     ]}
                     placeholder="Email"
+                    placeholderTextColor="#999"
                     value={values.email}
                     onChangeText={(text) => handleEmailChange(text, setFieldValue)}
                     onBlur={handleBlur('email')}
                     keyboardType="email-address"
+                    autoCapitalize="none"
                     accessibilityLabel="Email input"
                   />
                   {touched.email && errors.email && (
@@ -105,6 +105,7 @@ export default function Register() {
                   <TextInput
                     style={[styles.input, usernameError && styles.inputError]}
                     placeholder="Username"
+                    placeholderTextColor="#999"
                     value={fetchedUsername}
                     editable={false}
                     accessibilityLabel="Username (auto-filled)"
@@ -119,6 +120,7 @@ export default function Register() {
                       touched.password && errors.password && styles.inputError,
                     ]}
                     placeholder="Password"
+                    placeholderTextColor="#999"
                     value={values.password}
                     onChangeText={handleChange('password')}
                     onBlur={handleBlur('password')}
@@ -138,6 +140,7 @@ export default function Register() {
                       touched.confirmPassword && errors.confirmPassword && styles.inputError,
                     ]}
                     placeholder="Confirm Password"
+                    placeholderTextColor="#999"
                     value={values.confirmPassword}
                     onChangeText={handleChange('confirmPassword')}
                     onBlur={handleBlur('confirmPassword')}
@@ -196,7 +199,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
     margin: 20,
     borderRadius: 10,
-    width: '80%',
+    width: '85%',
   },
   title: {
     fontSize: 28,

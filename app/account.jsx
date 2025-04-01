@@ -3,7 +3,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from './auth-context';
-import { Colors } from '@/constants/Colors'; // Updated to match alias usage elsewhere
+import { Colors } from '@/constants/Colors';
 
 export default function Account() {
   const { user, logout } = useAuth();
@@ -67,7 +67,8 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 18,
     textAlign: 'center',
-    color: '#333',
+    color: '#999',
+    marginTop: 40,
   },
   logoutContainer: {
     flexDirection: 'row',
@@ -75,9 +76,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 15,
     paddingHorizontal: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
-    marginTop: 10,
+    borderWidth: 1,
+    borderColor: Colors.light.primary,
+    borderRadius: 8,
+    backgroundColor: '#fef6f6',
+    marginTop: 30,
   },
   logoutText: {
     fontSize: 16,

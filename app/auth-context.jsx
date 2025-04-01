@@ -11,14 +11,14 @@ export function AuthProvider({ children }) {
 
   const login = async (values, { setSubmitting }) => {
     try {
-      // Placeholder for blockchain login
       console.log('Blockchain login to be implemented:', values);
       Alert.alert('Success', `Logged in with ${values.email}`);
-      setUser({ email: values.email, username: 'user' }); // Mock username for now
+      setUser({ email: values.email, username: 'user' });
       setIsAuthenticated(true);
-      router.replace('/home'); // Navigate after state updates
+      router.replace('/home');
       return true;
     } catch (error) {
+      console.error("Login error:", error);
       Alert.alert('Error', 'Failed to log in: ' + error.message);
       return false;
     } finally {
@@ -37,9 +37,10 @@ export function AuthProvider({ children }) {
       Alert.alert('Success', 'Registration successful! Redirecting to Home.');
       setUser({ email: values.email, username });
       setIsAuthenticated(true);
-      router.replace('/home'); // Navigate after state updates
+      router.replace('/home');
       return true;
     } catch (error) {
+      console.error("Registration error:", error);
       Alert.alert('Error', 'Registration failed: ' + error.message);
       return false;
     } finally {

@@ -1,4 +1,4 @@
-
+// app/ticket-form.jsx
 import React, { useState } from 'react';
 import {
   View,
@@ -8,8 +8,10 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Alert,
-  Picker,
+  Platform,
+  KeyboardAvoidingView,
 } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
 import { useRouter } from 'expo-router';
 
 export default function TicketForm() {
@@ -25,59 +27,72 @@ export default function TicketForm() {
       return;
     }
 
-    // Simulate submitting the ticket
     Alert.alert('Ticket submitted!', 'Your support request has been received.');
     setTimeout(() => {
-      router.replace('/tickets'); // Navigate back to tickets screen
+      router.replace('/tickets');
     }, 1000);
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.header}>Submit a Support Ticket</Text>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={{ flex: 1 }}
+      >
+        <Text style={styles.header}>Submit a Support Ticket</Text>
 
-      <View style={styles.field}>
-        <Text style={styles.label}>Title</Text>
-        <TextInput
-          style={styles.input}
-          value={title}
-          onChangeText={setTitle}
-          placeholder="Brief issue summary"
-        />
-      </View>
-
-      <View style={styles.field}>
-        <Text style={styles.label}>Category</Text>
-        <View style={styles.pickerWrapper}>
-          <Picker
-            selectedValue={category}
-            style={styles.picker}
-            onValueChange={(itemValue) => setCategory(itemValue)}
-          >
-            <Picker.Item label="Login" value="Login" />
-            <Picker.Item label="Network" value="Network" />
-            <Picker.Item label="Hardware" value="Hardware" />
-            <Picker.Item label="Software" value="Software" />
-            <Picker.Item label="Other" value="Other" />
-          </Picker>
+        <View style={styles.field}>
+          <Text style={styles.label}>Title</Text>
+          <TextInput
+            style={styles.input}
+            value={title}
+            onChangeText={setTitle}
+            placeholder="Brief issue summary"
+            placeholderTextColor="#999"
+            accessibilityLabel="Title input"
+          />
         </View>
-      </View>
 
-      <View style={styles.field}>
-        <Text style={styles.label}>Description</Text>
-        <TextInput
-          style={[styles.input, styles.textArea]}
-          value={description}
-          onChangeText={setDescription}
-          placeholder="Describe the issue in detail..."
-          multiline
-          numberOfLines={4}
-        />
-      </View>
+        <View style={styles.field}>
+          <Text style={styles.label}>Category</Text>
+          <View style={styles.pickerWrapper}>
+            <Picker
+              selectedValue={category}
+              style={styles.picker}
+              onValueChange={(itemValue) => setCategory(itemValue)}
+              accessibilityLabel="Category Picker"
+            >
+              <Picker.Item label="Login" value="Login" />
+              <Picker.Item label="Network" value="Network" />
+              <Picker.Item label="Hardware" value="Hardware" />
+              <Picker.Item label="Software" value="Software" />
+              <Picker.Item label="Other" value="Other" />
+            </Picker>
+          </View>
+        </View>
 
-      <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-        <Text style={styles.buttonText}>Submit Ticket</Text>
-      </TouchableOpacity>
+        <View style={styles.field}>
+          <Text style={styles.label}>Description</Text>
+          <TextInput
+            style={[styles.input, styles.textArea]}
+            value={description}
+            onChangeText={setDescription}
+            placeholder="Describe the issue in detail..."
+            placeholderTextColor="#999"
+            multiline
+            numberOfLines={4}
+            accessibilityLabel="Description input"
+          />
+        </View>
+
+        <TouchableOpacity
+          style={styles.button}
+          onPress={handleSubmit}
+          accessibilityLabel="Submit Ticket Button"
+        >
+          <Text style={styles.buttonText}>Submit Ticket</Text>
+        </TouchableOpacity>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -107,6 +122,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 10,
     fontSize: 16,
+    color: '#333',
   },
   textArea: {
     height: 100,
@@ -119,6 +135,7 @@ const styles = StyleSheet.create({
   picker: {
     height: 50,
     width: '100%',
+    color: '#333',
   },
   button: {
     backgroundColor: '#800000',

@@ -1,4 +1,4 @@
-
+// app/ticket-details.jsx
 import React, { useEffect, useState } from 'react';
 import {
   View,
@@ -9,6 +9,8 @@ import {
   TextInput,
   TouchableOpacity,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
@@ -31,7 +33,6 @@ export default function TicketDetails() {
   const router = useRouter();
 
   useEffect(() => {
-    // Simulate fetching ticket by ID
     setTicket(mockTicket);
   }, [id]);
 
@@ -59,42 +60,48 @@ export default function TicketDetails() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scroll}>
-        <Text style={styles.title}>{ticket.title}</Text>
-        <Text style={styles.meta}>Status: {ticket.status}</Text>
-        <Text style={styles.meta}>Category: {ticket.category}</Text>
-        <Text style={styles.meta}>Submitted: {ticket.submittedAt}</Text>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={{ flex: 1 }}
+      >
+        <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+          <Text style={styles.title}>{ticket.title}</Text>
+          <Text style={styles.meta}>Status: {ticket.status}</Text>
+          <Text style={styles.meta}>Category: {ticket.category}</Text>
+          <Text style={styles.meta}>Submitted: {ticket.submittedAt}</Text>
 
-        <Text style={styles.sectionHeader}>Description</Text>
-        <Text style={styles.description}>{ticket.description}</Text>
+          <Text style={styles.sectionHeader}>Description</Text>
+          <Text style={styles.description}>{ticket.description}</Text>
 
-        <Text style={styles.sectionHeader}>Comments</Text>
-        {ticket.comments.map((c) => (
-          <View key={c.id} style={styles.comment}>
-            <Text style={styles.commentAuthor}>{c.author}</Text>
-            <Text style={styles.commentText}>{c.text}</Text>
-            <Text style={styles.commentTime}>{c.time}</Text>
-          </View>
-        ))}
+          <Text style={styles.sectionHeader}>Comments</Text>
+          {ticket.comments.map((c) => (
+            <View key={c.id} style={styles.comment}>
+              <Text style={styles.commentAuthor}>{c.author}</Text>
+              <Text style={styles.commentText}>{c.text}</Text>
+              <Text style={styles.commentTime}>{c.time}</Text>
+            </View>
+          ))}
 
-        <TextInput
-          value={newComment}
-          onChangeText={setNewComment}
-          placeholder="Add a comment..."
-          style={styles.input}
-          multiline
-        />
-        <TouchableOpacity style={styles.button} onPress={handleAddComment}>
-          <Text style={styles.buttonText}>Add Comment</Text>
-        </TouchableOpacity>
-      </ScrollView>
+          <TextInput
+            value={newComment}
+            onChangeText={setNewComment}
+            placeholder="Add a comment..."
+            placeholderTextColor="#999"
+            style={styles.input}
+            multiline
+          />
+          <TouchableOpacity style={styles.button} onPress={handleAddComment} accessibilityLabel="Add Comment Button">
+            <Text style={styles.buttonText}>Add Comment</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
-  scroll: { padding: 20 },
+  scroll: { padding: 20, paddingBottom: 40 },
   title: { fontSize: 22, fontWeight: 'bold', marginBottom: 10 },
   meta: { fontSize: 14, color: '#555', marginBottom: 4 },
   sectionHeader: {
@@ -102,6 +109,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginTop: 20,
     marginBottom: 6,
+    color: '#444',
   },
   description: {
     fontSize: 15,
@@ -116,8 +124,8 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     marginBottom: 10,
   },
-  commentAuthor: { fontWeight: '600' },
-  commentText: { marginVertical: 4 },
+  commentAuthor: { fontWeight: '600', color: '#333' },
+  commentText: { marginVertical: 4, color: '#444' },
   commentTime: { fontSize: 12, color: '#777' },
   input: {
     marginTop: 20,
@@ -128,6 +136,7 @@ const styles = StyleSheet.create({
     minHeight: 60,
     textAlignVertical: 'top',
     backgroundColor: '#fff',
+    color: '#333',
   },
   button: {
     marginTop: 10,

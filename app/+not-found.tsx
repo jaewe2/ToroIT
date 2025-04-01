@@ -1,6 +1,7 @@
-import { Link, Stack } from 'expo-router';
-import { StyleSheet } from 'react-native';
 
+// Updated +not-found.tsx for better UX and style
+import { Link, Stack } from 'expo-router';
+import { StyleSheet, View } from 'react-native';
 import { ThemedText } from '../components/ThemedText';
 import { ThemedView } from '../components/ThemedView';
 
@@ -9,9 +10,12 @@ export default function NotFoundScreen() {
     <>
       <Stack.Screen options={{ title: 'Oops!' }} />
       <ThemedView style={styles.container}>
-        <ThemedText type="title">This screen doesn't exist.</ThemedText>
-        <Link href="/" style={styles.link}>
-          <ThemedText type="link">Go to home screen!</ThemedText>
+        <ThemedText type="title">404 - Page Not Found</ThemedText>
+        <ThemedText type="default" style={styles.description}>
+          The screen you're looking for doesn’t exist or has been moved.
+        </ThemedText>
+        <Link href="/" style={styles.link} accessibilityLabel="Go to Home">
+          <ThemedText type="link">Return to Home Screen</ThemedText>
         </Link>
       </ThemedView>
     </>
@@ -25,8 +29,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 20,
   },
+  description: {
+    textAlign: 'center',
+    marginTop: 10,
+    fontSize: 16,
+  },
   link: {
-    marginTop: 15,
-    paddingVertical: 15,
+    marginTop: 20,
+    paddingVertical: 12,
   },
 });

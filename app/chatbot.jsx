@@ -4,7 +4,6 @@ import { GiftedChat } from 'react-native-gifted-chat';
 import { View, StyleSheet, Alert } from 'react-native';
 import axios from 'axios';
 
-// ✅ Environment-safe key loading
 const API_KEY = process.env.EXPO_PUBLIC_OPENAI_API_KEY;
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -31,18 +30,16 @@ export default function ChatbotScreen() {
       console.error('OpenAI API Key missing.');
     }
 
-    setMessages([
-      {
-        _id: '1',
-        text: 'Hello! I am your Toro IT Support Chatbot. I can help with networking, hardware issues, and support ticket tracking. How can I assist you today?',
-        createdAt: new Date(),
-        user: {
-          _id: 2,
-          name: 'Chatbot',
-          avatar: 'https://i.imgur.com/7k12EPD.png',
-        },
+    setMessages([{
+      _id: '1',
+      text: 'Hello! I am your Toro IT Support Chatbot. I can help with networking, hardware issues, and support ticket tracking. How can I assist you today?',
+      createdAt: new Date(),
+      user: {
+        _id: 2,
+        name: 'Chatbot',
+        avatar: 'https://i.imgur.com/7k12EPD.png',
       },
-    ]);
+    }]);
   }, []);
 
   const containsRestrictedContent = (message) =>
@@ -107,8 +104,7 @@ export default function ChatbotScreen() {
           messages: [
             {
               role: 'system',
-              content:
-                'You are a helpful IT support chatbot for Toro. Only answer questions related to networking, hardware, and ticketing. Do not answer anything else.',
+              content: 'You are a helpful IT support chatbot for Toro. Only answer questions related to networking, hardware, and ticketing. Do not answer anything else.',
             },
             ...messageHistory,
           ],
@@ -172,6 +168,10 @@ export default function ChatbotScreen() {
         onSend={(newMessages) => onSend(newMessages)}
         user={{ _id: 1 }}
         isTyping={isTyping}
+        placeholder="Ask about IT issues (e.g., Wi-Fi, projector)..."
+        renderUsernameOnMessage
+        alwaysShowSend
+        showAvatarForEveryMessage
       />
     </View>
   );

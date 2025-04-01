@@ -30,7 +30,10 @@ export default {
       favicon: './assets/favicon.png',
     },
     extra: {
-      openAIApiKey: process.env.EXPO_PUBLIC_OPENAI_API_KEY, // Expose the API key to the app
+      openAIApiKey: process.env.EXPO_PUBLIC_OPENAI_API_KEY,
     },
+    plugins: [
+      "expo-font"
+    ],
   },
 };

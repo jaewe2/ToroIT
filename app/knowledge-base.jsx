@@ -1,110 +1,107 @@
-
+// knowledge-base.jsx (Refined for search UX and list clarity)
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
   StyleSheet,
-  FlatList,
   SafeAreaView,
+  FlatList,
+  Text,
+  View,
+  TextInput,
   TouchableOpacity,
+  useColorScheme,
 } from 'react-native';
+import { Colors } from '@/constants/Colors';
 
-const mockArticles = [
-  {
-    id: 'KB001',
-    title: 'How to reset your CSUDH password',
-    content: 'Visit password.csudh.edu and follow the steps to reset your password...',
-  },
-  {
-    id: 'KB002',
-    title: 'Connecting to CSUDH Wi-Fi',
-    content: 'Use your MyCSUDH credentials to log into the CSUDH wireless network...',
-  },
-  {
-    id: 'KB003',
-    title: 'Using Canvas on Mobile',
-    content: 'Download the Canvas app and use your school login to sign in...',
-  },
-];
+export default function KnowledgeBaseScreen() {
+  const colorScheme = useColorScheme();
+  const theme = colorScheme === 'dark' ? Colors.dark : Colors.light;
+  const [search, setSearch] = useState('');
 
-export default function KnowledgeBase() {
-  const [query, setQuery] = useState('');
+  const articles = [
+    { id: '1', title: 'Resetting Your Password', summary: 'Steps to reset your MYCSUDH password.' },
+    { id: '2', title: 'Connecting to Campus Wi-Fi', summary: 'Guide to connect devices to ToroNet.' },
+    { id: '3', title: 'Canvas Troubleshooting', summary: 'Fix common Canvas issues.' },
+  ];
 
-  const filtered = mockArticles.filter((a) =>
-    a.title.toLowerCase().includes(query.toLowerCase())
+  const filteredArticles = articles.filter(article =>
+    article.title.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const renderArticle = ({ item }) => (
+    <TouchableOpacity
+      style={[styles.articleCard, { backgroundColor: theme.card }]}
+      accessibilityLabel={`Help Article: ${item.title}`}
+      onPress={() => {/* Navigate to article detail */}}
+    >
+      <Text style={[styles.articleTitle, { color: theme.text }]}>{item.title}</Text>
+      <Text style={[styles.articleSummary, { color: theme.textSecondary }]}>{item.summary}</Text>
+    </TouchableOpacity>
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Text style={styles.header}>Knowledge Base</Text>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+      <Text style={[styles.header, { color: theme.text }]}>Knowledge Base</Text>
       <TextInput
-        style={styles.search}
-        placeholder="Search FAQs or articles..."
-        value={query}
-        onChangeText={setQuery}
+        style={[styles.searchInput, { backgroundColor: theme.input, color: theme.text }]}
+        placeholder="Search articles..."
+        placeholderTextColor={theme.textSecondary}
+        value={search}
+        onChangeText={setSearch}
+        accessibilityLabel="Search articles input"
       />
-
       <FlatList
-        data={filtered}
+        data={filteredArticles}
+        renderItem={renderArticle}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.list}
-        ListEmptyComponent={
-          <Text style={styles.noResults}>No matching articles found.</Text>
-        }
-        renderItem={({ item }) => (
-          <TouchableOpacity style={styles.article}>
-            <Text style={styles.articleTitle}>{item.title}</Text>
-            <Text style={styles.articleContent}>{item.content}</Text>
-          </TouchableOpacity>
-        )}
+        contentContainerStyle={styles.listContainer}
+        ListEmptyComponent={<Text style={[styles.emptyText, { color: theme.textSecondary }]}>No articles found.</Text>}
       />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    padding: 20,
-  },
+  container: { flex: 1 },
   header: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 15,
     textAlign: 'center',
+    marginVertical: 20,
   },
-  search: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    padding: 10,
-    borderRadius: 8,
-    marginBottom: 15,
-    backgroundColor: '#f2f2f2',
+  searchInput: {
+    height: 50,
+    borderRadius: 10,
+    paddingHorizontal: 15,
+    marginHorizontal: 15,
+    marginBottom: 20,
+    fontSize: 16,
   },
-  list: {
-    paddingBottom: 20,
-  },
-  article: {
-    marginBottom: 15,
-    backgroundColor: '#f9f9f9',
+  listContainer: {
     padding: 15,
-    borderRadius: 8,
+    paddingBottom: 40,
+  },
+  articleCard: {
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 15,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   articleTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 18,
+    fontWeight: 'bold',
     marginBottom: 6,
   },
-  articleContent: {
+  articleSummary: {
     fontSize: 14,
-    color: '#555',
+    lineHeight: 20,
   },
-  noResults: {
-    textAlign: 'center',
-    marginTop: 30,
+  emptyText: {
     fontSize: 16,
-    color: '#888',
+    textAlign: 'center',
+    marginTop: 40,
   },
 });

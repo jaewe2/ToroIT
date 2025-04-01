@@ -1,4 +1,4 @@
-
+// Updated tickets.jsx with navigation to ticket-form
 import React, { useState } from 'react';
 import {
   View,
@@ -55,29 +55,40 @@ export default function TicketsScreen() {
     }
   };
 
+  const renderTicket = ({ item }) => (
+    <TouchableOpacity
+      style={styles.ticketItem}
+      onPress={() => goToTicket(item.id)}
+      accessibilityLabel={`Open ticket ${item.title}`}
+    >
+      <View style={styles.ticketHeader}>
+        <Text style={styles.ticketTitle}>{item.title}</Text>
+        <Text style={[styles.status, { color: getStatusColor(item.status) }]}> {item.status} </Text>
+      </View>
+      <Text style={styles.meta}>
+        {item.category} | Submitted: {item.submittedAt}
+      </Text>
+    </TouchableOpacity>
+  );
+
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.header}>My Tickets</Text>
+
+      <TouchableOpacity
+        style={styles.createButton}
+        onPress={() => router.push('/ticket-form')}
+        accessibilityLabel="Create a new support ticket"
+      >
+        <Text style={styles.createButtonText}>+ Submit New Ticket</Text>
+      </TouchableOpacity>
+
       <FlatList
         data={tickets}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.ticketItem}
-            onPress={() => goToTicket(item.id)}
-          >
-            <View style={styles.ticketHeader}>
-              <Text style={styles.ticketTitle}>{item.title}</Text>
-              <Text style={[styles.status, { color: getStatusColor(item.status) }]}>
-                {item.status}
-              </Text>
-            </View>
-            <Text style={styles.meta}>
-              {item.category} | Submitted: {item.submittedAt}
-            </Text>
-          </TouchableOpacity>
-        )}
+        renderItem={renderTicket}
+        ListEmptyComponent={<Text style={styles.empty}>No tickets to display.</Text>}
       />
     </SafeAreaView>
   );
@@ -93,6 +104,20 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 20,
+    textAlign: 'center',
+    color: '#800000',
+  },
+  createButton: {
+    backgroundColor: '#800000',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 20,
+    alignItems: 'center',
+  },
+  createButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
   list: {
     paddingBottom: 20,
@@ -111,6 +136,7 @@ const styles = StyleSheet.create({
   ticketTitle: {
     fontSize: 16,
     fontWeight: '600',
+    color: '#333',
   },
   status: {
     fontWeight: '600',
@@ -118,5 +144,11 @@ const styles = StyleSheet.create({
   meta: {
     fontSize: 14,
     color: '#555',
+  },
+  empty: {
+    fontSize: 16,
+    color: '#999',
+    textAlign: 'center',
+    marginTop: 40,
   },
 });

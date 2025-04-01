@@ -1,4 +1,4 @@
-
+// _layout.tsx with ticket-form and ticket-details removed from Tabs
 import { Tabs } from 'expo-router';
 import { FontAwesome, Ionicons } from '@expo/vector-icons';
 import { AuthProvider } from './auth-context';
@@ -17,7 +17,7 @@ export default function RootLayout() {
           tabBarStyle: { backgroundColor: maroon },
           tabBarActiveTintColor: gold,
           tabBarInactiveTintColor: '#fff',
-          tabBarShowLabel: false,
+          tabBarShowLabel: true,
         }}
       >
         <Tabs.Screen
@@ -25,11 +25,9 @@ export default function RootLayout() {
           options={{
             title: 'Login',
             headerShown: false,
-            tabBarStyle: { display: 'none' },
             tabBarIcon: ({ color, size }) => (
-              <FontAwesome name="sign-in" size={size} color={color} />
+              <Ionicons name="home" size={size} color={color} />
             ),
-            href: null,
           }}
         />
         <Tabs.Screen
@@ -39,8 +37,6 @@ export default function RootLayout() {
             tabBarIcon: ({ color, size }) => (
               <FontAwesome name="user-plus" size={size} color={color} />
             ),
-            tabBarStyle: { display: 'none' },
-            href: null,
           }}
         />
         <Tabs.Screen
@@ -97,6 +93,7 @@ export default function RootLayout() {
             ),
           }}
         />
+        {/* ticket-form and ticket-details are nested pages accessed from within Tickets tab */}
       </Tabs>
     </AuthProvider>
   );

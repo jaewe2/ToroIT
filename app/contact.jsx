@@ -1,74 +1,76 @@
-
+// contact.jsx — restructured with better visual hierarchy and accessibility
 import React from 'react';
 import { StyleSheet, SafeAreaView, View, Text, ScrollView, Linking, TouchableOpacity } from 'react-native';
 import { Appearance } from 'react-native';
+import { FontAwesome } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
 
 export default function ContactScreen() {
   const colorScheme = Appearance.getColorScheme();
   const theme = colorScheme === 'dark' ? Colors.dark : Colors.light;
 
-  const handleLink = (url) => {
-    Linking.openURL(url);
-  };
+  const handleLink = (url) => Linking.openURL(url);
+  const handleEmail = (email) => Linking.openURL(`mailto:${email}`);
+  const handleCall = (number) => Linking.openURL(`tel:${number}`);
 
-  const handleEmail = (email) => {
-    Linking.openURL(`mailto:${email}`);
-  };
+  const ContactRow = ({ icon, label, onPress }) => (
+    <TouchableOpacity
+      style={styles.contactRow}
+      onPress={onPress}
+      accessibilityLabel={label}
+    >
+      <FontAwesome name={icon} size={20} color={theme.primary} style={styles.icon} />
+      <Text style={[styles.link, { color: theme.primary }]}>{label}</Text>
+    </TouchableOpacity>
+  );
 
-  const handleCall = (number) => {
-    Linking.openURL(`tel:${number}`);
-  };
+  const Section = ({ title, children }) => (
+    <View style={[styles.section, { backgroundColor: theme.card }]}>
+      <Text style={[styles.sectionTitle, { color: theme.text }]}>{title}</Text>
+      {children}
+    </View>
+  );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}> 
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <Text style={[styles.title, { color: theme.text }]}>CSUDH IT Support</Text>
 
         <Section title="IT Call Center">
-          <Text style={[styles.text, { color: theme.text }]}>Phone: 310-243-2500</Text>
+          <ContactRow icon="phone" label="310-243-2500" onPress={() => handleCall('3102432500')} />
           <Text style={[styles.text, { color: theme.text }]}>Option #1: Login Issues (MYCSUDH, Email, Canvas)</Text>
         </Section>
 
         <Section title="Online Help Desk">
-          <TouchableOpacity onPress={() => handleLink('https://csudh.service-now.com')}>
-            <Text style={[styles.link, { color: theme.primary }]}>csudh.service-now.com</Text>
-          </TouchableOpacity>
+          <ContactRow icon="globe" label="csudh.service-now.com" onPress={() => handleLink('https://csudh.service-now.com')} />
         </Section>
 
         <Section title="Ask Teddy">
-          <Text style={[styles.text, { color: theme.text }]}>
-            Click the "Ask Teddy" tab at the bottom of the Help Desk page and choose "Connect with an Agent"
-          </Text>
+          <Text style={[styles.text, { color: theme.text }]}>Click "Ask Teddy" on the Help Desk page and select "Connect with an Agent"</Text>
+          <ContactRow icon="external-link" label="Go to Help Desk" onPress={() => handleLink('https://csudh.service-now.com')} />
         </Section>
 
         <Section title="Toro Welcome & Information Center">
-          <Text style={[styles.text, { color: theme.text }]}>Phone: 310-243-3645</Text>
-          <TouchableOpacity onPress={() => handleEmail('info@csudh.edu')}>
-            <Text style={[styles.link, { color: theme.primary }]}>info@csudh.edu</Text>
-          </TouchableOpacity>
+          <ContactRow icon="phone" label="310-243-3645" onPress={() => handleCall('3102433645')} />
+          <ContactRow icon="envelope" label="info@csudh.edu" onPress={() => handleEmail('info@csudh.edu')} />
         </Section>
 
         <Section title="Toro CARE">
-          <Text style={[styles.text, { color: theme.text }]}>Phone: 310-243-3527</Text>
-          <TouchableOpacity onPress={() => handleEmail('torocare@csudh.edu')}>
-            <Text style={[styles.link, { color: theme.primary }]}>torocare@csudh.edu</Text>
-          </TouchableOpacity>
+          <ContactRow icon="phone" label="310-243-3527" onPress={() => handleCall('3102433527')} />
+          <ContactRow icon="envelope" label="torocare@csudh.edu" onPress={() => handleEmail('torocare@csudh.edu')} />
         </Section>
 
         <Section title="Toro Learning & Testing Center (TLTC)">
-          <Text style={[styles.text, { color: theme.text }]}>Phone: 310-243-3827</Text>
+          <ContactRow icon="phone" label="310-243-3827" onPress={() => handleCall('3102433827')} />
         </Section>
 
         <Section title="Admissions">
-          <Text style={[styles.text, { color: theme.text }]}>Phone: 310-243-3645</Text>
-          <TouchableOpacity onPress={() => handleEmail('admissions@csudh.edu')}>
-            <Text style={[styles.link, { color: theme.primary }]}>admissions@csudh.edu</Text>
-          </TouchableOpacity>
+          <ContactRow icon="phone" label="310-243-3645" onPress={() => handleCall('3102433645')} />
+          <ContactRow icon="envelope" label="admissions@csudh.edu" onPress={() => handleEmail('admissions@csudh.edu')} />
         </Section>
 
         <Section title="Academic Technology">
-          <Text style={[styles.text, { color: theme.text }]}>Phone: 310-243-3176</Text>
+          <ContactRow icon="phone" label="310-243-3176" onPress={() => handleCall('3102433176')} />
           <Text style={[styles.text, { color: theme.text }]}>Location: North (Old) Library Room 5723</Text>
           <Text style={[styles.text, { color: theme.text }]}>Hours: Monday–Friday, 8 AM–5 PM</Text>
         </Section>
@@ -77,20 +79,9 @@ export default function ContactScreen() {
   );
 }
 
-const Section = ({ title, children }) => (
-  <View style={styles.section}>
-    <Text style={styles.sectionTitle}>{title}</Text>
-    {children}
-  </View>
-);
-
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scrollContainer: {
-    padding: 20,
-  },
+  container: { flex: 1 },
+  scrollContainer: { padding: 20 },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
@@ -99,19 +90,33 @@ const styles = StyleSheet.create({
   },
   section: {
     marginBottom: 25,
+    padding: 15,
+    borderRadius: 10,
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 8,
-    color: '#800000',
   },
   text: {
     fontSize: 16,
-    marginBottom: 4,
+    marginBottom: 6,
+  },
+  contactRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
   },
   link: {
     fontSize: 16,
     textDecorationLine: 'underline',
+  },
+  icon: {
+    marginRight: 10,
   },
 });
