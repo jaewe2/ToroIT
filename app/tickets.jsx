@@ -1,5 +1,4 @@
-// Updated tickets.jsx with navigation to ticket-form
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,80 +6,64 @@ import {
   FlatList,
   TouchableOpacity,
   SafeAreaView,
+  useColorScheme,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
+import { Colors } from '@/constants/Colors';
 
-const mockTickets = [
-  {
-    id: 'TCK-001',
-    title: 'Cannot access Canvas',
-    status: 'Open',
-    category: 'Login',
-    submittedAt: '2025-03-25',
-  },
-  {
-    id: 'TCK-002',
-    title: 'Wi-Fi disconnects randomly',
-    status: 'In Progress',
-    category: 'Network',
-    submittedAt: '2025-03-24',
-  },
-  {
-    id: 'TCK-003',
-    title: 'Projector not working in Library Room 202',
-    status: 'Resolved',
-    category: 'Hardware',
-    submittedAt: '2025-03-23',
-  },
-];
+const STORAGE_KEY = 'USER_TICKETS';
 
 export default function TicketsScreen() {
-  const [tickets, setTickets] = useState(mockTickets);
+  const [tickets, setTickets] = useState([]);
   const router = useRouter();
+  const theme = useColorScheme() === 'dark' ? Colors.dark : Colors.light;
 
-  const goToTicket = (ticketId) => {
-    router.push(`/ticket-details?id=${ticketId}`);
-  };
+  useEffect(() => {
+    const loadTickets = async () => {
+      try {
+        const stored = await AsyncStorage.getItem(STORAGE_KEY);
+        if (stored) setTickets(JSON.parse(stored));
+      } catch (err) {
+        console.error('Error loading tickets:', err);
+      }
+    };
+    loadTickets();
+  }, []);
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'Open':
-        return '#DAA520';
-      case 'In Progress':
-        return '#FFA500';
-      case 'Resolved':
-        return '#32CD32';
-      default:
-        return '#ccc';
+      case 'Open': return theme.secondary;
+      case 'In Progress': return '#FF8C00';
+      case 'Resolved': return '#4CAF50';
+      default: return theme.textSecondary;
     }
   };
 
   const renderTicket = ({ item }) => (
     <TouchableOpacity
-      style={styles.ticketItem}
-      onPress={() => goToTicket(item.id)}
-      accessibilityLabel={`Open ticket ${item.title}`}
+      style={[styles.card, { backgroundColor: theme.card }]}
+      onPress={() => router.push(`/ticket-details?id=${item.id}`)}
     >
-      <View style={styles.ticketHeader}>
-        <Text style={styles.ticketTitle}>{item.title}</Text>
-        <Text style={[styles.status, { color: getStatusColor(item.status) }]}> {item.status} </Text>
+      <View style={styles.cardHeader}>
+        <Text style={[styles.cardTitle, { color: theme.text }]}>{item.title}</Text>
+        <Text style={[styles.status, { color: getStatusColor(item.status) }]}>{item.status}</Text>
       </View>
-      <Text style={styles.meta}>
-        {item.category} | Submitted: {item.submittedAt}
+      <Text style={[styles.meta, { color: theme.textSecondary }]}>
+        {item.category} • Submitted: {item.submittedAt}
       </Text>
     </TouchableOpacity>
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Text style={styles.header}>My Tickets</Text>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+      <Text style={[styles.heading, { color: theme.primary }]}>My Tickets</Text>
 
       <TouchableOpacity
-        style={styles.createButton}
+        style={[styles.button, { backgroundColor: theme.primary }]}
         onPress={() => router.push('/ticket-form')}
-        accessibilityLabel="Create a new support ticket"
       >
-        <Text style={styles.createButtonText}>+ Submit New Ticket</Text>
+        <Text style={styles.buttonText}>+ Submit New Ticket</Text>
       </TouchableOpacity>
 
       <FlatList
@@ -88,66 +71,68 @@ export default function TicketsScreen() {
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
         renderItem={renderTicket}
-        ListEmptyComponent={<Text style={styles.empty}>No tickets to display.</Text>}
+        ListEmptyComponent={
+          <Text style={[styles.empty, { color: theme.textSecondary }]}>
+            No tickets yet. Submit one!
+          </Text>
+        }
       />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: '#fff',
-  },
-  header: {
+  container: { flex: 1 },
+  heading: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 20,
+    marginTop: 24,
+    marginBottom: 10,
     textAlign: 'center',
-    color: '#800000',
   },
-  createButton: {
-    backgroundColor: '#800000',
-    padding: 12,
-    borderRadius: 8,
+  button: {
+    marginHorizontal: 20,
     marginBottom: 20,
+    padding: 14,
+    borderRadius: 10,
     alignItems: 'center',
   },
-  createButtonText: {
+  buttonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
   },
   list: {
-    paddingBottom: 20,
+    paddingHorizontal: 20,
+    paddingBottom: 40,
   },
-  ticketItem: {
-    padding: 15,
-    borderRadius: 10,
-    backgroundColor: '#f2f2f2',
-    marginBottom: 12,
+  card: {
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
   },
-  ticketHeader: {
+  cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 6,
   },
-  ticketTitle: {
+  cardTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
   },
   status: {
-    fontWeight: '600',
+    fontWeight: 'bold',
   },
   meta: {
-    fontSize: 14,
-    color: '#555',
+    fontSize: 13,
   },
   empty: {
     fontSize: 16,
-    color: '#999',
     textAlign: 'center',
     marginTop: 40,
   },

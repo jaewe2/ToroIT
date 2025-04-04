@@ -12,5 +12,5 @@
     "**/*.ts",
     "**/*.tsx",
     "**/*.jsx"
-  ]
+, "constants/Colors.js"  ]
 }

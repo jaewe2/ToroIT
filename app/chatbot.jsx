@@ -1,8 +1,20 @@
-// app/chatbot.jsx
-import React, { useState, useCallback, useEffect } from 'react';
-import { GiftedChat } from 'react-native-gifted-chat';
-import { View, StyleSheet, Alert } from 'react-native';
+import React, { useState, useRef, useEffect } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  useColorScheme,
+  Alert,
+} from 'react-native';
 import axios from 'axios';
+import { Ionicons } from '@expo/vector-icons';
+import { Colors } from '@/constants/Colors';
 
 const API_KEY = process.env.EXPO_PUBLIC_OPENAI_API_KEY;
 
@@ -17,52 +29,34 @@ const allowedITKeywords = [
 ];
 
 const FALLBACK_RESPONSE =
-  'I’m here to help with IT support related to networking (e.g., Wi-Fi, VPN), hardware problems (e.g., projectors, USBs, monitors), and ticketing (e.g., submitting or tracking tickets). Please ask a question about one of these topics.';
+  'I can help with networking (e.g., Wi-Fi, VPN), hardware problems (e.g., projectors, USBs, monitors), and ticketing (e.g., submitting or tracking tickets). Please ask about one of those topics.';
 
-export default function ChatbotScreen() {
-  const [messages, setMessages] = useState([]);
-  const [isTyping, setIsTyping] = useState(false);
+export default function Chatbot() {
+  const [messages, setMessages] = useState([
+    { id: 1, text: 'Hello! I am your Toro IT Support Chatbot. How can I assist you today?', sender: 'bot' },
+  ]);
+  const [inputText, setInputText] = useState('');
+  const [loading, setLoading] = useState(false);
   const [lastRequestTime, setLastRequestTime] = useState(0);
+  const scrollViewRef = useRef(null);
+  const theme = useColorScheme() === 'dark' ? Colors.dark : Colors.light;
 
-  useEffect(() => {
-    if (!API_KEY) {
-      Alert.alert('Error', 'Chatbot API key is missing. Please contact support.');
-      console.error('OpenAI API Key missing.');
-    }
+  const containsRestrictedContent = (msg) =>
+    restrictedKeywords.some((k) => msg.toLowerCase().includes(k));
 
-    setMessages([{
-      _id: '1',
-      text: 'Hello! I am your Toro IT Support Chatbot. I can help with networking, hardware issues, and support ticket tracking. How can I assist you today?',
-      createdAt: new Date(),
-      user: {
-        _id: 2,
-        name: 'Chatbot',
-        avatar: 'https://i.imgur.com/7k12EPD.png',
-      },
-    }]);
-  }, []);
-
-  const containsRestrictedContent = (message) =>
-    restrictedKeywords.some((keyword) => message.toLowerCase().includes(keyword));
-
-  const isITRelated = (message) =>
-    allowedITKeywords.some((keyword) => message.toLowerCase().includes(keyword));
+  const isITRelated = (msg) =>
+    allowedITKeywords.some((k) => msg.toLowerCase().includes(k));
 
   const moderateContent = async (text) => {
     try {
-      const response = await axios.post(
+      const res = await axios.post(
         'https://api.openai.com/v1/moderations',
         { input: text },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${API_KEY}`,
-          },
-        }
+        { headers: { Authorization: `Bearer ${API_KEY}` } }
       );
-      return response.data.results[0].flagged;
-    } catch (error) {
-      console.error('Moderation error:', error.message);
+      return res.data.results[0].flagged;
+    } catch (err) {
+      console.error('Moderation failed:', err);
       return false;
     }
   };
@@ -79,23 +73,21 @@ export default function ChatbotScreen() {
     if (flagged) return FALLBACK_RESPONSE;
 
     try {
-      setIsTyping(true);
+      setLoading(true);
 
       const now = Date.now();
       const timeSinceLast = now - lastRequestTime;
       if (timeSinceLast < 2000) await delay(2000 - timeSinceLast);
-
       setLastRequestTime(Date.now());
 
-      const messageHistory = messages
+      const history = messages
         .slice()
         .reverse()
         .map((msg) => ({
-          role: msg.user._id === 1 ? 'user' : 'assistant',
+          role: msg.sender === 'user' ? 'user' : 'assistant',
           content: msg.text,
-        }));
-
-      messageHistory.push({ role: 'user', content: userMessage });
+        }))
+        .slice(0, 6);
 
       const response = await axios.post(
         'https://api.openai.com/v1/chat/completions',
@@ -104,82 +96,159 @@ export default function ChatbotScreen() {
           messages: [
             {
               role: 'system',
-              content: 'You are a helpful IT support chatbot for Toro. Only answer questions related to networking, hardware, and ticketing. Do not answer anything else.',
+              content:
+                'You are a helpful Toro IT support assistant. Only respond to questions about networking, hardware, and ticketing. Politely decline others.',
             },
-            ...messageHistory,
+            ...history,
+            { role: 'user', content: userMessage },
           ],
-          max_tokens: 150,
           temperature: 0.7,
+          max_tokens: 150,
         },
         {
           headers: {
-            'Content-Type': 'application/json',
             Authorization: `Bearer ${API_KEY}`,
+            'Content-Type': 'application/json',
           },
         }
       );
 
-      const botResponse = response.data.choices[0].message.content.trim();
+      const reply = response.data.choices[0].message.content.trim();
+      const flaggedReply = await moderateContent(reply);
+      if (flaggedReply || containsRestrictedContent(reply)) return FALLBACK_RESPONSE;
 
-      if (await moderateContent(botResponse) || containsRestrictedContent(botResponse)) {
-        return FALLBACK_RESPONSE;
-      }
-
-      return botResponse;
-    } catch (error) {
-      console.error('Chatbot error:', error.message);
-      if (error.response?.status === 429 && retryCount < maxRetries) {
-        const delayTime = baseDelay * Math.pow(2, retryCount);
-        await delay(delayTime);
+      return reply;
+    } catch (err) {
+      console.error('Chatbot error:', err.message);
+      if (err.response?.status === 429 && retryCount < maxRetries) {
+        await delay(baseDelay * Math.pow(2, retryCount));
         return getOpenAIResponse(userMessage, retryCount + 1);
       }
 
-      Alert.alert('Error', 'Failed to get a chatbot response.');
+      Alert.alert('Error', 'Failed to get a response from the chatbot.');
       return 'Sorry, something went wrong. Please try again.';
     } finally {
-      setIsTyping(false);
+      setLoading(false);
     }
   };
 
-  const onSend = useCallback(async (newMessages = []) => {
-    setMessages((prev) => GiftedChat.append(prev, newMessages));
+  const handleSend = async () => {
+    if (!inputText.trim()) return;
 
-    const userMessage = newMessages[0].text;
-    const botText = await getOpenAIResponse(userMessage);
-
-    const botMessage = {
-      _id: Math.random().toString(36).substring(7),
-      text: botText,
-      createdAt: new Date(),
-      user: {
-        _id: 2,
-        name: 'Chatbot',
-        avatar: 'https://i.imgur.com/7k12EPD.png',
-      },
+    const userMsg = {
+      id: Date.now(),
+      text: inputText,
+      sender: 'user',
     };
 
-    setMessages((prev) => GiftedChat.append(prev, [botMessage]));
-  }, [messages]);
+    setMessages((prev) => [...prev, userMsg]);
+    setInputText('');
+
+    const botReplyText = await getOpenAIResponse(userMsg.text);
+
+    const botMsg = {
+      id: Date.now() + 1,
+      text: botReplyText,
+      sender: 'bot',
+    };
+
+    setMessages((prev) => [...prev, botMsg]);
+  };
+
+  useEffect(() => {
+    scrollViewRef.current?.scrollToEnd({ animated: true });
+  }, [messages, loading]);
 
   return (
-    <View style={styles.container}>
-      <GiftedChat
-        messages={messages}
-        onSend={(newMessages) => onSend(newMessages)}
-        user={{ _id: 1 }}
-        isTyping={isTyping}
-        placeholder="Ask about IT issues (e.g., Wi-Fi, projector)..."
-        renderUsernameOnMessage
-        alwaysShowSend
-        showAvatarForEveryMessage
-      />
-    </View>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      style={[styles.container, { backgroundColor: theme.background }]}
+    >
+      <ScrollView
+        ref={scrollViewRef}
+        contentContainerStyle={styles.chatContainer}
+        showsVerticalScrollIndicator={false}
+      >
+        {messages.map((msg) => {
+          const isUser = msg.sender === 'user';
+          return (
+            <View
+              key={msg.id}
+              style={[
+                styles.bubble,
+                {
+                  alignSelf: isUser ? 'flex-end' : 'flex-start',
+                  backgroundColor: isUser ? theme.primary : theme.card,
+                  borderTopRightRadius: isUser ? 0 : 16,
+                  borderTopLeftRadius: isUser ? 16 : 0,
+                },
+              ]}
+            >
+              <Text style={[styles.messageText, { color: isUser ? '#fff' : theme.text }]}>
+                {msg.text}
+              </Text>
+            </View>
+          );
+        })}
+        {loading && (
+          <View style={[styles.bubble, { backgroundColor: theme.card, alignSelf: 'flex-start' }]}>
+            <ActivityIndicator size="small" color={theme.primary} />
+          </View>
+        )}
+      </ScrollView>
+
+      <View style={[styles.inputContainer, { backgroundColor: theme.card, borderColor: theme.inputBorder }]}>
+        <TextInput
+          style={[styles.input, { color: theme.text, backgroundColor: theme.card }]}
+          placeholder="Ask about IT issues (e.g., Wi-Fi, projector)..."
+          placeholderTextColor={theme.inputBorder}
+          value={inputText}
+          onChangeText={setInputText}
+          onSubmitEditing={handleSend}
+        />
+        <TouchableOpacity onPress={handleSend} style={styles.sendButton}>
+          <Ionicons name="send" size={20} color="#fff" />
+        </TouchableOpacity>
+      </View>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+  },
+  chatContainer: {
+    padding: 16,
+    paddingBottom: 100,
+  },
+  bubble: {
+    maxWidth: '80%',
+    padding: 12,
+    borderRadius: 16,
+    marginBottom: 10,
+  },
+  messageText: {
+    fontSize: 15,
+    lineHeight: 20,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    borderTopWidth: 1.5,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  input: {
+    flex: 1,
+    fontSize: 15,
+    padding: 10,
+    borderRadius: 10,
+  },
+  sendButton: {
+    backgroundColor: '#7A003C', // CSUDH Maroon
+    padding: 10,
+    borderRadius: 8,
+    marginLeft: 8,
+    alignSelf: 'center',
   },
 });

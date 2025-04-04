@@ -1,107 +1,109 @@
-// knowledge-base.jsx (Refined for search UX and list clarity)
 import React, { useState } from 'react';
-import {
-  StyleSheet,
-  SafeAreaView,
-  FlatList,
-  Text,
-  View,
-  TextInput,
-  TouchableOpacity,
-  useColorScheme,
-} from 'react-native';
-import { Colors } from '@/constants/Colors';
+import { View, Text, TouchableOpacity, ScrollView, Linking, StyleSheet } from 'react-native';
+
+import { knowledgeBaseData } from '../constants/knowledgeBaseData'; 
 
 export default function KnowledgeBaseScreen() {
-  const colorScheme = useColorScheme();
-  const theme = colorScheme === 'dark' ? Colors.dark : Colors.light;
-  const [search, setSearch] = useState('');
+  const [activeCategory, setActiveCategory] = useState(null);
+  const [expandedArticles, setExpandedArticles] = useState({});
 
-  const articles = [
-    { id: '1', title: 'Resetting Your Password', summary: 'Steps to reset your MYCSUDH password.' },
-    { id: '2', title: 'Connecting to Campus Wi-Fi', summary: 'Guide to connect devices to ToroNet.' },
-    { id: '3', title: 'Canvas Troubleshooting', summary: 'Fix common Canvas issues.' },
-  ];
-
-  const filteredArticles = articles.filter(article =>
-    article.title.toLowerCase().includes(search.toLowerCase())
-  );
-
-  const renderArticle = ({ item }) => (
-    <TouchableOpacity
-      style={[styles.articleCard, { backgroundColor: theme.card }]}
-      accessibilityLabel={`Help Article: ${item.title}`}
-      onPress={() => {/* Navigate to article detail */}}
-    >
-      <Text style={[styles.articleTitle, { color: theme.text }]}>{item.title}</Text>
-      <Text style={[styles.articleSummary, { color: theme.textSecondary }]}>{item.summary}</Text>
-    </TouchableOpacity>
-  );
+  const toggleArticle = (articleTitle) => {
+    setExpandedArticles((prev) => ({
+      ...prev,
+      [articleTitle]: !prev[articleTitle],
+    }));
+  };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-      <Text style={[styles.header, { color: theme.text }]}>Knowledge Base</Text>
-      <TextInput
-        style={[styles.searchInput, { backgroundColor: theme.input, color: theme.text }]}
-        placeholder="Search articles..."
-        placeholderTextColor={theme.textSecondary}
-        value={search}
-        onChangeText={setSearch}
-        accessibilityLabel="Search articles input"
-      />
-      <FlatList
-        data={filteredArticles}
-        renderItem={renderArticle}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContainer}
-        ListEmptyComponent={<Text style={[styles.emptyText, { color: theme.textSecondary }]}>No articles found.</Text>}
-      />
-    </SafeAreaView>
+    <ScrollView style={styles.container}>
+      <Text style={styles.heading}>Knowledge Base</Text>
+      {knowledgeBaseData.map((category, index) => (
+        <View key={index} style={styles.categoryBlock}>
+          <TouchableOpacity onPress={() => setActiveCategory(activeCategory === index ? null : index)}>
+            <Text style={styles.categoryTitle}>{category.category}</Text>
+          </TouchableOpacity>
+
+          {activeCategory === index && (
+            <View style={styles.articleList}>
+              {category.articles.map((article, i) => (
+                <View key={i} style={styles.articleBlock}>
+                  <TouchableOpacity onPress={() => toggleArticle(article.title)}>
+                    <Text style={styles.articleTitle}>{article.title}</Text>
+                    <Text style={styles.articleSummary}>{article.summary}</Text>
+                  </TouchableOpacity>
+                  {expandedArticles[article.title] && (
+                    <View style={styles.articleDetails}>
+                      <Text style={styles.articleText}>{article.details}</Text>
+                      {article.links?.map((link, idx) => (
+                        <TouchableOpacity key={idx} onPress={() => Linking.openURL(link.url)}>
+                          <Text style={styles.link}>{link.label}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  )}
+                </View>
+              ))}
+            </View>
+          )}
+        </View>
+      ))}
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  header: {
+  container: {
+    flex: 1,
+    backgroundColor: '#000',
+    padding: 16,
+  },
+  heading: {
     fontSize: 24,
     fontWeight: 'bold',
-    textAlign: 'center',
-    marginVertical: 20,
+    color: '#FFD700', // CSUDH gold
+    marginBottom: 16,
+    textAlign: 'center'
   },
-  searchInput: {
-    height: 50,
-    borderRadius: 10,
-    paddingHorizontal: 15,
-    marginHorizontal: 15,
+  categoryBlock: {
     marginBottom: 20,
-    fontSize: 16,
+    backgroundColor: '#4C0000', // CSUDH maroon
+    borderRadius: 12,
+    padding: 12,
   },
-  listContainer: {
-    padding: 15,
-    paddingBottom: 40,
+  categoryTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 8,
   },
-  articleCard: {
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 15,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+  articleList: {
+    paddingLeft: 10,
+  },
+  articleBlock: {
+    backgroundColor: '#111',
+    borderRadius: 8,
+    marginBottom: 12,
+    padding: 10,
   },
   articleTitle: {
-    fontSize: 18,
+    fontSize: 16,
+    color: '#FFD700',
     fontWeight: 'bold',
-    marginBottom: 6,
   },
   articleSummary: {
-    fontSize: 14,
-    lineHeight: 20,
+    color: '#ccc',
+    fontStyle: 'italic',
   },
-  emptyText: {
-    fontSize: 16,
-    textAlign: 'center',
-    marginTop: 40,
+  articleDetails: {
+    marginTop: 8,
+  },
+  articleText: {
+    color: '#eee',
+    marginBottom: 6,
+  },
+  link: {
+    color: '#87cefa',
+    textDecorationLine: 'underline',
+    marginBottom: 4,
   },
 });

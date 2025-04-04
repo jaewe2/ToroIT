@@ -1,84 +1,106 @@
-// app/ticket-details.jsx
 import React, { useEffect, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  SafeAreaView,
-  TextInput,
-  TouchableOpacity,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
+  View, Text, StyleSheet, ScrollView,
+  SafeAreaView, TextInput, TouchableOpacity,
+  KeyboardAvoidingView, Platform, useColorScheme,
 } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useLocalSearchParams } from 'expo-router'; // ✅ correct hook
+import { Colors } from '@/constants/Colors';
 
-const mockTicket = {
-  id: 'TCK-001',
-  title: 'Cannot access Canvas',
-  description: 'I cannot log into Canvas even with the correct password.',
-  status: 'Open',
-  category: 'Login',
-  submittedAt: '2025-03-25',
-  comments: [
-    { id: 1, text: 'We’re looking into it.', author: 'IT Agent', time: '2h ago' },
-  ],
-};
+const STORAGE_KEY = 'USER_TICKETS';
 
 export default function TicketDetails() {
-  const { id } = useLocalSearchParams();
+  const params = useLocalSearchParams();         // ✅ correct usage
+  const id = params.id;                          // 👈 get ticket ID from query string
   const [ticket, setTicket] = useState(null);
   const [newComment, setNewComment] = useState('');
-  const router = useRouter();
+  const theme = useColorScheme() === 'dark' ? Colors.dark : Colors.light;
 
-  useEffect(() => {
-    setTicket(mockTicket);
-  }, [id]);
+  const loadTicket = async () => {
+    try {
+      const stored = await AsyncStorage.getItem(STORAGE_KEY);
+      const tickets = stored ? JSON.parse(stored) : [];
 
-  const handleAddComment = () => {
-    if (!newComment.trim()) {
-      Alert.alert('Please enter a comment.');
-      return;
+      console.log('Looking for ticket ID:', id);
+      const found = tickets.find((t) => t.id === id);
+      if (found) {
+        setTicket(found);
+      } else {
+        console.warn('Ticket not found for ID:', id);
+      }
+    } catch (err) {
+      console.error('Error loading ticket:', err);
     }
-
-    const comment = {
-      id: Date.now(),
-      text: newComment,
-      author: 'You',
-      time: 'Just now',
-    };
-
-    setTicket((prev) => ({
-      ...prev,
-      comments: [...prev.comments, comment],
-    }));
-    setNewComment('');
   };
 
-  if (!ticket) return null;
+  const handleAddComment = async () => {
+    if (!newComment.trim()) return;
+
+    try {
+      const stored = await AsyncStorage.getItem(STORAGE_KEY);
+      const tickets = stored ? JSON.parse(stored) : [];
+
+      const updatedTickets = tickets.map((t) => {
+        if (t.id === ticket.id) {
+          const updatedComments = [
+            ...(t.comments || []),
+            {
+              id: Date.now(),
+              text: newComment,
+              author: 'You',
+              time: 'Just now',
+            },
+          ];
+          t.comments = updatedComments;
+          setTicket({ ...t });
+        }
+        return t;
+      });
+
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updatedTickets));
+      setNewComment('');
+    } catch (err) {
+      console.error('Error saving comment:', err);
+    }
+  };
+
+  useEffect(() => {
+    if (id) loadTicket();
+    else console.warn('No ID in query params');
+  }, [id]);
+
+  if (!ticket) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <Text style={{ color: theme.text }}>Loading or ticket not found.</Text>
+      </View>
+    );
+  }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{ flex: 1 }}
       >
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-          <Text style={styles.title}>{ticket.title}</Text>
-          <Text style={styles.meta}>Status: {ticket.status}</Text>
-          <Text style={styles.meta}>Category: {ticket.category}</Text>
-          <Text style={styles.meta}>Submitted: {ticket.submittedAt}</Text>
+          <Text style={[styles.title, { color: theme.primary }]}>{ticket.title}</Text>
+          <Text style={[styles.meta, { color: theme.textSecondary }]}>Status: {ticket.status}</Text>
+          <Text style={[styles.meta, { color: theme.textSecondary }]}>Category: {ticket.category}</Text>
+          <Text style={[styles.meta, { color: theme.textSecondary }]}>Submitted: {ticket.submittedAt}</Text>
 
-          <Text style={styles.sectionHeader}>Description</Text>
-          <Text style={styles.description}>{ticket.description}</Text>
+          <Text style={[styles.sectionHeader, { color: theme.text }]}>Description</Text>
+          <Text style={[styles.description, { color: theme.text, backgroundColor: theme.card }]}>
+            {ticket.description}
+          </Text>
 
-          <Text style={styles.sectionHeader}>Comments</Text>
-          {ticket.comments.map((c) => (
-            <View key={c.id} style={styles.comment}>
-              <Text style={styles.commentAuthor}>{c.author}</Text>
-              <Text style={styles.commentText}>{c.text}</Text>
-              <Text style={styles.commentTime}>{c.time}</Text>
+          <Text style={[styles.sectionHeader, { color: theme.text }]}>Comments</Text>
+          {(ticket.comments || []).map((c) => (
+            <View key={c.id} style={[styles.commentCard, { backgroundColor: theme.card }]}>
+              <Text style={[styles.commentAuthor, { color: theme.text }]}>{c.author}</Text>
+              <Text style={[styles.commentText, { color: theme.text }]}>{c.text}</Text>
+              <Text style={[styles.commentTime, { color: theme.textSecondary }]}>{c.time}</Text>
             </View>
           ))}
 
@@ -86,11 +108,22 @@ export default function TicketDetails() {
             value={newComment}
             onChangeText={setNewComment}
             placeholder="Add a comment..."
-            placeholderTextColor="#999"
-            style={styles.input}
+            placeholderTextColor={theme.textSecondary}
+            style={[
+              styles.input,
+              {
+                borderColor: theme.inputBorder,
+                backgroundColor: theme.card,
+                color: theme.text,
+              },
+            ]}
             multiline
           />
-          <TouchableOpacity style={styles.button} onPress={handleAddComment} accessibilityLabel="Add Comment Button">
+
+          <TouchableOpacity
+            style={[styles.button, { backgroundColor: theme.primary }]}
+            onPress={handleAddComment}
+          >
             <Text style={styles.buttonText}>Add Comment</Text>
           </TouchableOpacity>
         </ScrollView>
@@ -100,49 +133,60 @@ export default function TicketDetails() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
-  scroll: { padding: 20, paddingBottom: 40 },
-  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 10 },
-  meta: { fontSize: 14, color: '#555', marginBottom: 4 },
+  container: { flex: 1 },
+  scroll: {
+    padding: 20,
+    paddingBottom: 40,
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  meta: {
+    fontSize: 14,
+    marginBottom: 4,
+  },
   sectionHeader: {
     fontSize: 16,
     fontWeight: 'bold',
     marginTop: 20,
-    marginBottom: 6,
-    color: '#444',
+    marginBottom: 8,
   },
   description: {
     fontSize: 15,
-    lineHeight: 20,
-    backgroundColor: '#f2f2f2',
-    padding: 10,
-    borderRadius: 8,
-  },
-  comment: {
-    backgroundColor: '#f9f9f9',
-    padding: 10,
-    borderRadius: 6,
-    marginBottom: 10,
-  },
-  commentAuthor: { fontWeight: '600', color: '#333' },
-  commentText: { marginVertical: 4, color: '#444' },
-  commentTime: { fontSize: 12, color: '#777' },
-  input: {
-    marginTop: 20,
-    borderWidth: 1,
-    borderColor: '#ccc',
     padding: 12,
     borderRadius: 8,
-    minHeight: 60,
+    lineHeight: 20,
+  },
+  commentCard: {
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 12,
+  },
+  commentAuthor: {
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  commentText: {
+    fontSize: 14,
+    marginBottom: 4,
+  },
+  commentTime: {
+    fontSize: 12,
+  },
+  input: {
+    borderWidth: 2,
+    borderRadius: 10,
+    padding: 12,
+    marginTop: 20,
     textAlignVertical: 'top',
-    backgroundColor: '#fff',
-    color: '#333',
+    minHeight: 60,
   },
   button: {
-    marginTop: 10,
-    backgroundColor: '#800000',
-    padding: 12,
-    borderRadius: 8,
+    marginTop: 12,
+    padding: 14,
+    borderRadius: 10,
     alignItems: 'center',
   },
   buttonText: {

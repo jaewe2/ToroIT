@@ -1,152 +1,198 @@
-// app/ticket-form.jsx
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  StyleSheet,
-  TouchableOpacity,
-  SafeAreaView,
-  Alert,
-  Platform,
-  KeyboardAvoidingView,
+  View, Text, StyleSheet, ScrollView,
+  SafeAreaView, TextInput, TouchableOpacity,
+  KeyboardAvoidingView, Platform, useColorScheme,
 } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
-import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useLocalSearchParams } from 'expo-router'; // ✅ correct hook
+import { Colors } from '@/constants/Colors';
 
-export default function TicketForm() {
-  const router = useRouter();
+const STORAGE_KEY = 'USER_TICKETS';
 
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('Login');
+export default function TicketDetails() {
+  const params = useLocalSearchParams(); // ✅ as object
+  const id = params.id;
 
-  const handleSubmit = () => {
-    if (!title || !description) {
-      Alert.alert('Please fill in all fields.');
-      return;
+  const [ticket, setTicket] = useState(null);
+  const [newComment, setNewComment] = useState('');
+  const theme = useColorScheme() === 'dark' ? Colors.dark : Colors.light;
+
+  const loadTicket = async () => {
+    try {
+      const stored = await AsyncStorage.getItem(STORAGE_KEY);
+      const tickets = stored ? JSON.parse(stored) : [];
+
+      console.log('Looking for ticket ID:', id);
+      const found = tickets.find((t) => t.id === id);
+      if (found) {
+        setTicket(found);
+      } else {
+        console.warn('Ticket not found for ID:', id);
+      }
+    } catch (err) {
+      console.error('Error loading ticket:', err);
     }
-
-    Alert.alert('Ticket submitted!', 'Your support request has been received.');
-    setTimeout(() => {
-      router.replace('/tickets');
-    }, 1000);
   };
 
+  const handleAddComment = async () => {
+    if (!newComment.trim()) return;
+
+    try {
+      const stored = await AsyncStorage.getItem(STORAGE_KEY);
+      const tickets = stored ? JSON.parse(stored) : [];
+
+      const updatedTickets = tickets.map((t) => {
+        if (t.id === ticket.id) {
+          const updatedComments = [
+            ...(t.comments || []),
+            {
+              id: Date.now(),
+              text: newComment,
+              author: 'You',
+              time: 'Just now',
+            },
+          ];
+          t.comments = updatedComments;
+          setTicket({ ...t });
+        }
+        return t;
+      });
+
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updatedTickets));
+      setNewComment('');
+    } catch (err) {
+      console.error('Error saving comment:', err);
+    }
+  };
+
+  useEffect(() => {
+    if (id) loadTicket();
+    else console.warn('No ID in query params');
+  }, [id]);
+
+  if (!ticket) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <Text style={{ color: theme.text }}>Loading or ticket not found.</Text>
+      </View>
+    );
+  }
+
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{ flex: 1 }}
       >
-        <Text style={styles.header}>Submit a Support Ticket</Text>
+        <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+          <Text style={[styles.title, { color: theme.primary }]}>{ticket.title}</Text>
+          <Text style={[styles.meta, { color: theme.textSecondary }]}>Status: {ticket.status}</Text>
+          <Text style={[styles.meta, { color: theme.textSecondary }]}>Category: {ticket.category}</Text>
+          <Text style={[styles.meta, { color: theme.textSecondary }]}>Submitted: {ticket.submittedAt}</Text>
 
-        <View style={styles.field}>
-          <Text style={styles.label}>Title</Text>
+          <Text style={[styles.sectionHeader, { color: theme.text }]}>Description</Text>
+          <Text style={[styles.description, { color: theme.text, backgroundColor: theme.card }]}>
+            {ticket.description}
+          </Text>
+
+          <Text style={[styles.sectionHeader, { color: theme.text }]}>Comments</Text>
+          {(ticket.comments || []).map((c) => (
+            <View key={c.id} style={[styles.commentCard, { backgroundColor: theme.card }]}>
+              <Text style={[styles.commentAuthor, { color: theme.text }]}>{c.author}</Text>
+              <Text style={[styles.commentText, { color: theme.text }]}>{c.text}</Text>
+              <Text style={[styles.commentTime, { color: theme.textSecondary }]}>{c.time}</Text>
+            </View>
+          ))}
+
           <TextInput
-            style={styles.input}
-            value={title}
-            onChangeText={setTitle}
-            placeholder="Brief issue summary"
-            placeholderTextColor="#999"
-            accessibilityLabel="Title input"
-          />
-        </View>
-
-        <View style={styles.field}>
-          <Text style={styles.label}>Category</Text>
-          <View style={styles.pickerWrapper}>
-            <Picker
-              selectedValue={category}
-              style={styles.picker}
-              onValueChange={(itemValue) => setCategory(itemValue)}
-              accessibilityLabel="Category Picker"
-            >
-              <Picker.Item label="Login" value="Login" />
-              <Picker.Item label="Network" value="Network" />
-              <Picker.Item label="Hardware" value="Hardware" />
-              <Picker.Item label="Software" value="Software" />
-              <Picker.Item label="Other" value="Other" />
-            </Picker>
-          </View>
-        </View>
-
-        <View style={styles.field}>
-          <Text style={styles.label}>Description</Text>
-          <TextInput
-            style={[styles.input, styles.textArea]}
-            value={description}
-            onChangeText={setDescription}
-            placeholder="Describe the issue in detail..."
-            placeholderTextColor="#999"
+            value={newComment}
+            onChangeText={setNewComment}
+            placeholder="Add a comment..."
+            placeholderTextColor={theme.textSecondary}
+            style={[
+              styles.input,
+              {
+                borderColor: theme.inputBorder,
+                backgroundColor: theme.card,
+                color: theme.text,
+              },
+            ]}
             multiline
-            numberOfLines={4}
-            accessibilityLabel="Description input"
           />
-        </View>
 
-        <TouchableOpacity
-          style={styles.button}
-          onPress={handleSubmit}
-          accessibilityLabel="Submit Ticket Button"
-        >
-          <Text style={styles.buttonText}>Submit Ticket</Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.button, { backgroundColor: theme.primary }]}
+            onPress={handleAddComment}
+          >
+            <Text style={styles.buttonText}>Add Comment</Text>
+          </TouchableOpacity>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
+  container: { flex: 1 },
+  scroll: {
     padding: 20,
-    backgroundColor: '#fff',
+    paddingBottom: 40,
   },
-  header: {
+  title: {
     fontSize: 22,
     fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
+    marginBottom: 8,
   },
-  field: {
-    marginBottom: 15,
+  meta: {
+    fontSize: 14,
+    marginBottom: 4,
   },
-  label: {
+  sectionHeader: {
     fontSize: 16,
-    marginBottom: 6,
-    color: '#333',
+    fontWeight: 'bold',
+    marginTop: 20,
+    marginBottom: 8,
+  },
+  description: {
+    fontSize: 15,
+    padding: 12,
+    borderRadius: 8,
+    lineHeight: 20,
+  },
+  commentCard: {
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 12,
+  },
+  commentAuthor: {
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  commentText: {
+    fontSize: 14,
+    marginBottom: 4,
+  },
+  commentTime: {
+    fontSize: 12,
   },
   input: {
-    backgroundColor: '#f2f2f2',
-    borderRadius: 8,
-    padding: 10,
-    fontSize: 16,
-    color: '#333',
-  },
-  textArea: {
-    height: 100,
+    borderWidth: 2,
+    borderRadius: 10,
+    padding: 12,
+    marginTop: 20,
     textAlignVertical: 'top',
-  },
-  pickerWrapper: {
-    backgroundColor: '#f2f2f2',
-    borderRadius: 8,
-  },
-  picker: {
-    height: 50,
-    width: '100%',
-    color: '#333',
+    minHeight: 60,
   },
   button: {
-    backgroundColor: '#800000',
-    padding: 15,
+    marginTop: 12,
+    padding: 14,
     borderRadius: 10,
     alignItems: 'center',
-    marginTop: 30,
   },
   buttonText: {
     color: '#fff',
-    fontSize: 18,
     fontWeight: '600',
+    fontSize: 16,
   },
 });

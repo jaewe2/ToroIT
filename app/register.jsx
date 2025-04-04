@@ -1,4 +1,4 @@
-// app/register.jsx
+
 import React, { useState } from 'react';
 import {
   StyleSheet,
@@ -7,258 +7,184 @@ import {
   TextInput,
   TouchableOpacity,
   ActivityIndicator,
+  useColorScheme,
+  Image,
 } from 'react-native';
-import { router } from 'expo-router';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 import { Colors } from '@/constants/Colors';
 import { useAuth } from './auth-context';
+import { router } from 'expo-router';
 
 const RegisterSchema = Yup.object().shape({
   email: Yup.string()
     .email('Invalid email')
-    .matches(/@toromail\.csudh\.edu$/, 'Email must be a valid @toromail.csudh.edu address')
-    .required('Email is required'),
-  password: Yup.string()
-    .min(6, 'Password must be at least 6 characters')
-    .required('Password is required'),
+    .matches(/@toromail\.csudh\.edu$/, 'Must be a @toromail.csudh.edu email')
+    .required('Required'),
+  password: Yup.string().min(6, 'Min 6 characters').required('Required'),
   confirmPassword: Yup.string()
     .oneOf([Yup.ref('password'), null], 'Passwords must match')
-    .required('Confirm Password is required'),
+    .required('Required'),
 });
 
 export default function Register() {
   const { register } = useAuth();
-  const [fetchedUsername, setFetchedUsername] = useState('');
-  const [usernameError, setUsernameError] = useState('');
+  const [username, setUsername] = useState('');
+  const colorScheme = useColorScheme();
+  const theme = colorScheme === 'dark' ? Colors.dark : Colors.light;
 
-  const deriveUsernameFromEmail = (email) => {
-    try {
-      const prefix = email.split('@')[0];
-      const username = prefix.length > 4 ? prefix.substring(0, 4) : prefix;
-      return { username, error: null };
-    } catch (error) {
-      return { username: '', error: 'Error deriving username: ' + error.message };
-    }
-  };
-
-  const handleEmailChange = (email, setFieldValue) => {
-    setFieldValue('email', email);
-    if (email.endsWith('@toromail.csudh.edu')) {
-      const { username, error } = deriveUsernameFromEmail(email);
-      setFetchedUsername(username);
-      setUsernameError(error || '');
-    } else {
-      setFetchedUsername('');
-      setUsernameError('');
-    }
+  const deriveUsername = (email) => {
+    const prefix = email.split('@')[0];
+    return prefix.length > 4 ? prefix.slice(0, 4) : prefix;
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.background}>
-        <View style={styles.content}>
-          <Text style={styles.title}>Register for Toro IT Support</Text>
-
-          <Formik
-            initialValues={{ email: '', password: '', confirmPassword: '' }}
-            validationSchema={RegisterSchema}
-            onSubmit={(values, { setSubmitting }) =>
-              register(values, fetchedUsername, { setSubmitting })
-            }
-          >
-            {({
-              handleChange,
-              handleBlur,
-              handleSubmit,
-              values,
-              errors,
-              touched,
-              setFieldValue,
-              isSubmitting,
-            }) => (
-              <>
-                <View style={styles.inputContainer}>
-                  <Text style={styles.label}>Email (must be @toromail.csudh.edu)</Text>
-                  <TextInput
-                    style={[
-                      styles.input,
-                      (touched.email && (errors.email || usernameError)) && styles.inputError,
-                    ]}
-                    placeholder="Email"
-                    placeholderTextColor="#999"
-                    value={values.email}
-                    onChangeText={(text) => handleEmailChange(text, setFieldValue)}
-                    onBlur={handleBlur('email')}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                    accessibilityLabel="Email input"
-                  />
-                  {touched.email && errors.email && (
-                    <Text style={styles.errorText}>{errors.email}</Text>
-                  )}
-                  {usernameError && <Text style={styles.errorText}>{usernameError}</Text>}
-                </View>
-
-                <View style={styles.inputContainer}>
-                  <Text style={styles.label}>Username (auto-filled)</Text>
-                  <TextInput
-                    style={[styles.input, usernameError && styles.inputError]}
-                    placeholder="Username"
-                    placeholderTextColor="#999"
-                    value={fetchedUsername}
-                    editable={false}
-                    accessibilityLabel="Username (auto-filled)"
-                  />
-                </View>
-
-                <View style={styles.inputContainer}>
-                  <Text style={styles.label}>Password</Text>
-                  <TextInput
-                    style={[
-                      styles.input,
-                      touched.password && errors.password && styles.inputError,
-                    ]}
-                    placeholder="Password"
-                    placeholderTextColor="#999"
-                    value={values.password}
-                    onChangeText={handleChange('password')}
-                    onBlur={handleBlur('password')}
-                    secureTextEntry
-                    accessibilityLabel="Password input"
-                  />
-                  {touched.password && errors.password && (
-                    <Text style={styles.errorText}>{errors.password}</Text>
-                  )}
-                </View>
-
-                <View style={styles.inputContainer}>
-                  <Text style={styles.label}>Confirm Password</Text>
-                  <TextInput
-                    style={[
-                      styles.input,
-                      touched.confirmPassword && errors.confirmPassword && styles.inputError,
-                    ]}
-                    placeholder="Confirm Password"
-                    placeholderTextColor="#999"
-                    value={values.confirmPassword}
-                    onChangeText={handleChange('confirmPassword')}
-                    onBlur={handleBlur('confirmPassword')}
-                    secureTextEntry
-                    accessibilityLabel="Confirm password input"
-                  />
-                  {touched.confirmPassword && errors.confirmPassword && (
-                    <Text style={styles.errorText}>{errors.confirmPassword}</Text>
-                  )}
-                </View>
-
-                <TouchableOpacity
-                  style={[styles.button, isSubmitting && styles.buttonDisabled]}
-                  onPress={handleSubmit}
-                  disabled={isSubmitting}
-                  accessibilityLabel="Register button"
-                >
-                  {isSubmitting ? (
-                    <ActivityIndicator size="small" color="#fff" />
-                  ) : (
-                    <Text style={styles.buttonText}>Register</Text>
-                  )}
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  onPress={() => router.replace('/')}
-                  style={styles.skipLink}
-                  accessibilityLabel="Back to Login"
-                >
-                  <Text style={styles.skipText}>Back to Login</Text>
-                </TouchableOpacity>
-              </>
-            )}
-          </Formik>
-        </View>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
+      <View style={styles.logoWrap}>
+        <Image source={require('../assets/images/toro-mascot.png')} style={styles.logo} />
+        <Text style={[styles.title, { color: theme.primary }]}>Register for Toro IT</Text>
       </View>
+
+      <Formik
+        initialValues={{ email: '', password: '', confirmPassword: '' }}
+        validationSchema={RegisterSchema}
+        onSubmit={(values, { setSubmitting }) => {
+          const uname = deriveUsername(values.email);
+          setUsername(uname);
+          register(values, uname, { setSubmitting });
+        }}
+      >
+        {({
+          handleChange,
+          handleBlur,
+          handleSubmit,
+          values,
+          errors,
+          touched,
+          setFieldValue,
+          isSubmitting,
+        }) => (
+          <View style={styles.form}>
+            <TextInput
+              style={[
+                styles.input,
+                { borderColor: theme.inputBorder, color: theme.text },
+              ]}
+              placeholder="CSUDH Email"
+              placeholderTextColor={theme.textSecondary}
+              value={values.email}
+              onChangeText={(text) => {
+                setFieldValue('email', text);
+                setUsername(deriveUsername(text));
+              }}
+              onBlur={handleBlur('email')}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+            {touched.email && errors.email && <Text style={styles.error}>{errors.email}</Text>}
+
+            <TextInput
+              style={[
+                styles.input,
+                { borderColor: theme.inputBorder, color: theme.text },
+              ]}
+              placeholder="Password"
+              placeholderTextColor={theme.textSecondary}
+              value={values.password}
+              onChangeText={handleChange('password')}
+              onBlur={handleBlur('password')}
+              secureTextEntry
+            />
+            {touched.password && errors.password && <Text style={styles.error}>{errors.password}</Text>}
+
+            <TextInput
+              style={[
+                styles.input,
+                { borderColor: theme.inputBorder, color: theme.text },
+              ]}
+              placeholder="Confirm Password"
+              placeholderTextColor={theme.textSecondary}
+              value={values.confirmPassword}
+              onChangeText={handleChange('confirmPassword')}
+              onBlur={handleBlur('confirmPassword')}
+              secureTextEntry
+            />
+            {touched.confirmPassword && errors.confirmPassword && (
+              <Text style={styles.error}>{errors.confirmPassword}</Text>
+            )}
+
+            {/* Show auto-generated username */}
+            {username ? (
+              <View style={styles.usernamePreview}>
+                <Text style={{ color: theme.textSecondary }}>Username:</Text>
+                <Text style={{ color: theme.primary, fontWeight: 'bold' }}> {username}</Text>
+              </View>
+            ) : null}
+
+            <TouchableOpacity
+              style={[styles.button, { backgroundColor: theme.primary }]}
+              onPress={handleSubmit}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Text style={styles.buttonText}>Register</Text>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => router.replace('/')}
+              style={styles.link}
+            >
+              <Text style={[styles.linkText, { color: theme.secondary }]}>Back to Login</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </Formik>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  background: {
-    flex: 1,
-    width: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: Colors.light.primary,
-  },
-  content: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    margin: 20,
-    borderRadius: 10,
-    width: '85%',
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 30,
-    color: Colors.light.primary,
-    textAlign: 'center',
-  },
-  inputContainer: {
-    width: '100%',
-    marginBottom: 15,
-  },
-  label: {
-    fontSize: 16,
-    marginBottom: 5,
-    color: '#333',
-  },
+  container: { flex: 1, justifyContent: 'center', paddingHorizontal: 24 },
+  logoWrap: { alignItems: 'center', marginBottom: 32 },
+  logo: { width: 80, height: 80, marginBottom: 10 },
+  title: { fontSize: 26, fontWeight: 'bold' },
+  form: {},
   input: {
-    width: '100%',
     height: 50,
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    paddingHorizontal: 15,
     borderWidth: 2,
-    borderColor: Colors.light.secondary,
-    color: '#333',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    marginBottom: 12,
   },
-  inputError: {
-    borderColor: '#ff0000',
-  },
-  errorText: {
-    color: '#ff0000',
-    fontSize: 12,
-    marginTop: 5,
-    textAlign: 'center',
+  usernamePreview: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
   },
   button: {
-    width: '100%',
-    height: 50,
-    backgroundColor: Colors.light.primary,
-    borderRadius: 8,
-    justifyContent: 'center',
+    padding: 14,
+    borderRadius: 10,
     alignItems: 'center',
-    marginBottom: 20,
-  },
-  buttonDisabled: {
-    backgroundColor: '#b36666',
-    opacity: 0.7,
+    marginTop: 8,
   },
   buttonText: {
     color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  skipLink: {
-    marginTop: 10,
-  },
-  skipText: {
-    color: Colors.light.primary,
+    fontWeight: '600',
     fontSize: 16,
+  },
+  link: {
+    marginTop: 16,
+    alignSelf: 'center',
+  },
+  linkText: {
+    fontSize: 15,
+  },
+  error: {
+    color: '#C62828',
+    fontSize: 12,
+    marginBottom: 8,
   },
 });

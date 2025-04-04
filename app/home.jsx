@@ -1,6 +1,13 @@
-// home.jsx with improved UX and padding
 import React from 'react';
-import { StyleSheet, SafeAreaView, FlatList, Text, View, TouchableOpacity, useColorScheme } from 'react-native';
+import {
+  StyleSheet,
+  SafeAreaView,
+  FlatList,
+  Text,
+  View,
+  TouchableOpacity,
+  useColorScheme,
+} from 'react-native';
 import { Colors } from '@/constants/Colors';
 
 export default function TicketsScreen() {
@@ -17,14 +24,14 @@ export default function TicketsScreen() {
     <TouchableOpacity
       style={[styles.ticketCard, { backgroundColor: theme.card }]}
       accessibilityLabel={`Ticket: ${item.title}, Status: ${item.status}`}
-      onPress={() => {/* Navigate to ticket detail */}}
+      onPress={() => {}}
     >
-      <View>
-        <Text style={[styles.ticketTitle, { color: theme.text }]}>{item.title}</Text>
-        <Text style={[styles.ticketStatus, {
-          color: item.status === 'Open' ? theme.primary : theme.secondary,
-        }]}>Status: {item.status}</Text>
-      </View>
+      <Text style={[styles.ticketTitle, { color: theme.text }]}>{item.title}</Text>
+      <Text style={[styles.ticketStatus, {
+        color: item.status === 'Open' ? theme.primary : theme.secondary,
+      }]}>
+        Status: {item.status}
+      </Text>
     </TouchableOpacity>
   );
 
@@ -36,7 +43,11 @@ export default function TicketsScreen() {
         renderItem={renderTicket}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContainer}
-        ListEmptyComponent={<Text style={[styles.emptyText, { color: theme.textSecondary }]}>No tickets available.</Text>}
+        ListEmptyComponent={
+          <Text style={[styles.emptyText, { color: theme.textSecondary }]}>
+            No tickets available.
+          </Text>
+        }
       />
     </SafeAreaView>
   );
@@ -47,31 +58,31 @@ const styles = StyleSheet.create({
   header: {
     fontSize: 24,
     fontWeight: 'bold',
-    textAlign: 'center',
     marginVertical: 20,
+    textAlign: 'center',
   },
   listContainer: {
-    padding: 15,
+    paddingHorizontal: 20,
     paddingBottom: 40,
   },
   ticketCard: {
-    padding: 15,
+    padding: 16,
     borderRadius: 10,
     marginBottom: 15,
-    elevation: 2,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowRadius: 2,
+    elevation: 2,
   },
   ticketTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '600',
     marginBottom: 4,
   },
   ticketStatus: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   emptyText: {
     fontSize: 16,
