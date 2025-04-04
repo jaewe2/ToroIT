@@ -73,6 +73,9 @@ npm install -g expo-cli
 npm uninstall bad-words
 npm prune
 
+#optional: async storage
+
+npx expo install @react-native-async-storage/async-storage
 
 #needed for flash screens:
 
