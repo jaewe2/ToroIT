@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   StyleSheet,
@@ -41,8 +40,13 @@ export default function Register() {
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={styles.logoWrap}>
-        <Image source={require('../assets/images/toro-mascot.png')} style={styles.logo} />
-        <Text style={[styles.title, { color: theme.primary }]}>Register for Toro IT</Text>
+        <Image
+          source={require('../assets/images/toro-mascot.png')}
+          style={styles.logo}
+        />
+        <Text style={[styles.title, { color: theme.primary }]}>
+          Register for Toro IT
+        </Text>
       </View>
 
       <Formik
@@ -68,7 +72,10 @@ export default function Register() {
             <TextInput
               style={[
                 styles.input,
-                { borderColor: theme.inputBorder, color: theme.text },
+                {
+                  borderColor: theme.inputBorder,
+                  color: theme.text,
+                },
               ]}
               placeholder="CSUDH Email"
               placeholderTextColor={theme.textSecondary}
@@ -81,12 +88,29 @@ export default function Register() {
               keyboardType="email-address"
               autoCapitalize="none"
             />
-            {touched.email && errors.email && <Text style={styles.error}>{errors.email}</Text>}
+            {touched.email && errors.email && (
+              <Text style={styles.error}>{errors.email}</Text>
+            )}
+
+            {/* Username Display */}
+            {username ? (
+              <View style={[styles.usernameBox, { borderColor: theme.primary, backgroundColor: theme.card }]}>
+                <Text style={[styles.usernameLabel, { color: theme.primary }]}>
+                  Your Toro Username:
+                </Text>
+                <Text style={[styles.usernameValue, { color: theme.secondary }]}>
+                  {username}
+                </Text>
+              </View>
+            ) : null}
 
             <TextInput
               style={[
                 styles.input,
-                { borderColor: theme.inputBorder, color: theme.text },
+                {
+                  borderColor: theme.inputBorder,
+                  color: theme.text,
+                },
               ]}
               placeholder="Password"
               placeholderTextColor={theme.textSecondary}
@@ -95,12 +119,17 @@ export default function Register() {
               onBlur={handleBlur('password')}
               secureTextEntry
             />
-            {touched.password && errors.password && <Text style={styles.error}>{errors.password}</Text>}
+            {touched.password && errors.password && (
+              <Text style={styles.error}>{errors.password}</Text>
+            )}
 
             <TextInput
               style={[
                 styles.input,
-                { borderColor: theme.inputBorder, color: theme.text },
+                {
+                  borderColor: theme.inputBorder,
+                  color: theme.text,
+                },
               ]}
               placeholder="Confirm Password"
               placeholderTextColor={theme.textSecondary}
@@ -112,14 +141,6 @@ export default function Register() {
             {touched.confirmPassword && errors.confirmPassword && (
               <Text style={styles.error}>{errors.confirmPassword}</Text>
             )}
-
-            {/* Show auto-generated username */}
-            {username ? (
-              <View style={styles.usernamePreview}>
-                <Text style={{ color: theme.textSecondary }}>Username:</Text>
-                <Text style={{ color: theme.primary, fontWeight: 'bold' }}> {username}</Text>
-              </View>
-            ) : null}
 
             <TouchableOpacity
               style={[styles.button, { backgroundColor: theme.primary }]}
@@ -137,7 +158,9 @@ export default function Register() {
               onPress={() => router.replace('/')}
               style={styles.link}
             >
-              <Text style={[styles.linkText, { color: theme.secondary }]}>Back to Login</Text>
+              <Text style={[styles.linkText, { color: theme.secondary }]}>
+                Back to Login
+              </Text>
             </TouchableOpacity>
           </View>
         )}
@@ -159,10 +182,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     marginBottom: 12,
   },
-  usernamePreview: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  usernameBox: {
+    borderWidth: 2,
+    borderRadius: 10,
+    padding: 10,
     marginBottom: 12,
+    alignItems: 'center',
+  },
+  usernameLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  usernameValue: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginTop: 4,
   },
   button: {
     padding: 14,

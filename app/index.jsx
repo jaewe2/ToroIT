@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   StyleSheet,
   View,
@@ -9,14 +9,15 @@ import {
   Image,
   useColorScheme,
 } from 'react-native';
-import { Link } from 'expo-router';
+import { Link, router } from 'expo-router';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 import { Colors } from '@/constants/Colors';
 import { useAuth } from './auth-context';
 
+// Updated validation schema to accept either username or email
 const LoginSchema = Yup.object().shape({
-  email: Yup.string().email('Invalid email').required('Email is required'),
+  identifier: Yup.string().required('Username or email is required'),
   password: Yup.string().min(6, 'Min 6 characters').required('Password is required'),
 });
 
@@ -24,6 +25,27 @@ export default function Login() {
   const { login } = useAuth();
   const colorScheme = useColorScheme();
   const theme = colorScheme === 'dark' ? Colors.dark : Colors.light;
+  const [loginAttempts, setLoginAttempts] = useState(0);
+  const MAX_ATTEMPTS = 4;
+
+  const handleLoginSubmit = async (values, { setSubmitting, setErrors }) => {
+    try {
+      await login(values, { setSubmitting });
+    } catch (error) {
+      const newAttempts = loginAttempts + 1;
+      setLoginAttempts(newAttempts);
+      
+      if (newAttempts >= MAX_ATTEMPTS) {
+        // Redirect to password reset page after 4 failed attempts
+        router.push('https://www.csudh.edu/password/');
+        setLoginAttempts(0); // Reset attempts after redirect
+      } else {
+        setErrors({ password: `Login failed. ${MAX_ATTEMPTS - newAttempts} attempts remaining.` });
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
@@ -33,9 +55,9 @@ export default function Login() {
       </View>
 
       <Formik
-        initialValues={{ email: '', password: '' }}
+        initialValues={{ identifier: '', password: '' }}
         validationSchema={LoginSchema}
-        onSubmit={(values, { setSubmitting }) => login(values, { setSubmitting })}
+        onSubmit={handleLoginSubmit}
       >
         {({
           handleChange,
@@ -52,15 +74,16 @@ export default function Login() {
                 styles.input,
                 { borderColor: theme.inputBorder, color: theme.text },
               ]}
-              placeholder="Email"
+              placeholder="Username or Email"
               placeholderTextColor={theme.textSecondary}
-              value={values.email}
-              onChangeText={handleChange('email')}
-              onBlur={handleBlur('email')}
-              keyboardType="email-address"
+              value={values.identifier}
+              onChangeText={handleChange('identifier')}
+              onBlur={handleBlur('identifier')}
               autoCapitalize="none"
             />
-            {touched.email && errors.email && <Text style={styles.error}>{errors.email}</Text>}
+            {touched.identifier && errors.identifier && (
+              <Text style={styles.error}>{errors.identifier}</Text>
+            )}
 
             <TextInput
               style={[
@@ -74,7 +97,9 @@ export default function Login() {
               onBlur={handleBlur('password')}
               secureTextEntry
             />
-            {touched.password && errors.password && <Text style={styles.error}>{errors.password}</Text>}
+            {touched.password && errors.password && (
+              <Text style={styles.error}>{errors.password}</Text>
+            )}
 
             <TouchableOpacity
               style={[styles.button, { backgroundColor: theme.primary }]}
@@ -89,7 +114,9 @@ export default function Login() {
             </TouchableOpacity>
 
             <Link href="/register" style={styles.link}>
-              <Text style={[styles.linkText, { color: theme.secondary }]}>Need an account? Register</Text>
+              <Text style={[styles.linkText, { color: theme.secondary }]}>
+                Need an account? Register
+              </Text>
             </Link>
           </View>
         )}

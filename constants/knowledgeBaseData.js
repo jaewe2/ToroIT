@@ -1,7 +1,8 @@
 export const knowledgeBaseData = [
   {
-    category: 'Accounts & Access',
+    category: 'Accounts & Security',
     articles: [
+      // From "Accounts & Access"
       {
         title: 'Reset Your Password or Unlock Your Account',
         summary: 'Use the CSUDH Self-Service Password Reset (SSPR) portal to reset or unlock your Toro account.',
@@ -31,137 +32,7 @@ export const knowledgeBaseData = [
         details: `Keeping your recovery info up to date helps avoid lockouts.`,
         links: [{ label: 'Manage SSPR Settings', url: 'https://password.csudh.edu' }],
       },
-    ],
-  },
-
-  {
-    category: 'Business Applications & Reporting',
-    articles: [
-      {
-        title: 'PeopleSoft Access & Forms',
-        summary: 'Forms for requesting access to PeopleSoft modules.',
-        details: `Access is available to faculty, staff, and student workers who require it for job responsibilities.`,
-        links: [{ label: 'Access Request Forms', url: 'https://www.csudh.edu/peoplesoft/forms' }],
-      },
-      {
-        title: 'myCSUDH Overview',
-        summary: 'Your portal to student, faculty, and staff self-service tools.',
-        details: `Access student records, financial info, course registration, and more.`,
-        links: [{ label: 'Go to myCSUDH', url: 'https://my.csudh.edu' }],
-      },
-      {
-        title: 'Employee Email (Outlook)',
-        summary: 'Send and receive official campus communications.',
-        details: `All employees receive Outlook-based email accounts through Microsoft 365.`,
-        links: [{ label: 'Access Webmail', url: 'https://outlook.office365.com' }],
-      },
-      {
-        title: 'Toropay (Student Payments)',
-        summary: 'Secure student account billing and payments.',
-        details: `Toropay provides real-time access to tuition billing and payment history.`,
-        links: [{ label: 'Access Toropay', url: 'https://toropay.csudh.edu' }],
-      },
-    ],
-  },
-
-  {
-    category: 'Communication & Collaboration',
-    articles: [
-      {
-        title: 'Microsoft Teams',
-        summary: 'Chat and collaborate across campus using Teams.',
-        details: `Microsoft Teams is part of Office 365 and offers instant messaging, video conferencing, and file sharing.`,
-        links: [{ label: 'Open Microsoft Teams', url: 'https://teams.microsoft.com' }],
-      },
-      {
-        title: 'Zoom Meetings',
-        summary: 'Host video meetings, webinars, and record lectures.',
-        details: `Zoom supports classes, office hours, remote meetings, and lecture capture across platforms.`,
-        links: [{ label: 'Log in to Zoom', url: 'https://csudh.zoom.us' }],
-      },
-      {
-        title: 'LinkedIn Learning',
-        summary: 'Access expert-led tutorials for software and skills.',
-        details: `All students, faculty, and staff have free access to LinkedIn Learning. Log in using your CSUDH credentials.`,
-        links: [{ label: 'Start Learning', url: 'https://www.linkedin.com/learning-login/' }],
-      },
-      {
-        title: 'Clearspan Communicator',
-        summary: 'Use your campus extension on a mobile device.',
-        details: `Route and receive campus calls through your device. No need to forward from your office line.`,
-        links: [{ label: 'Clearspan Web Portal', url: 'https://csudh.clearspancloud.com' }],
-      },
-    ],
-  },
-
-  {
-    category: 'Hardware & Software',
-    articles: [
-      {
-        title: 'Adobe Creative Cloud',
-        summary: 'Get access to Photoshop, Illustrator, InDesign and more.',
-        details: `CSUDH provides Creative Cloud licenses to students, faculty, and staff for creative and academic work.`,
-        links: [{ label: 'Download Adobe CC', url: 'https://www.csudh.edu/adobe' }],
-      },
-      {
-        title: 'Technology Checkout Program',
-        summary: 'Borrow laptops, webcams, and more.',
-        details: `Students can check out equipment needed for class assignments or remote learning.`,
-        links: [{ label: 'Tech Checkout Info', url: 'https://www.csudh.edu/it/checkout' }],
-      },
-      {
-        title: 'Microsoft 365 Access',
-        summary: 'Install Word, Excel, PowerPoint, Outlook, and more.',
-        details: `Available to all active CSUDH students and employees.`,
-        links: [{ label: 'Install Office', url: 'https://portal.office.com' }],
-      },
-    ],
-  },
-
-  {
-    category: 'IT Continuity Resources',
-    articles: [
-      {
-        title: 'Secure VPN Access (GlobalProtect)',
-        summary: 'Use CSUDH VPN to access campus resources remotely.',
-        details: `The secure VPN allows employees to safely access university systems from home.`,
-        links: [{ label: 'Download GlobalProtect', url: 'https://www.csudh.edu/vpn' }],
-      },
-      {
-        title: 'Remote Desktop',
-        summary: 'Work remotely as if you’re on your campus desktop.',
-        details: `Use Remote Desktop in combination with VPN to access files, software, and resources securely.`,
-        links: [{ label: 'Remote Desktop Setup', url: 'https://www.csudh.edu/remote-access' }],
-      },
-    ],
-  },
-
-  {
-    category: 'Network',
-    articles: [
-      {
-        title: 'Campus Wi-Fi (Eduroam)',
-        summary: 'Connect to wireless internet using your CSUDH credentials.',
-        details: `Select the 'eduroam' network and sign in with your full ToroMail address.`,
-        links: [{ label: 'Wi-Fi Setup Instructions', url: 'https://www.csudh.edu/wifi' }],
-      },
-      {
-        title: 'Ethernet Access',
-        summary: 'Use a wired connection in campus offices.',
-        details: `Ethernet offers the most stable connection and is recommended for critical use cases.`,
-        links: [{ label: 'Submit Ethernet Request', url: 'https://csudh.service-now.com' }],
-      },
-      {
-        title: 'Network Authentication Help',
-        summary: 'Learn about access requirements and validation steps.',
-        details: `Understand the terms: authentication, validation key, and what to expect when accessing secure networks.`,
-      },
-    ],
-  },
-
-  {
-    category: 'Security',
-    articles: [
+      // From "Security"
       {
         title: 'Set Up Multi-Factor Authentication (MFA)',
         summary: 'Protect your account with Duo multi-factor authentication.',
@@ -196,8 +67,65 @@ export const knowledgeBaseData = [
   },
 
   {
-    category: 'Teaching & Learning',
+    category: 'Campus Systems & Tools',
     articles: [
+      // From Business Applications & Reporting
+      {
+        title: 'PeopleSoft Access & Forms',
+        summary: 'Forms for requesting access to PeopleSoft modules.',
+        details: `Access is available to faculty, staff, and student workers who require it for job responsibilities.`,
+        links: [{ label: 'Access Request Forms', url: 'https://www.csudh.edu/peoplesoft/forms' }],
+      },
+      {
+        title: 'myCSUDH Overview',
+        summary: 'Your portal to student, faculty, and staff self-service tools.',
+        details: `Access student records, financial info, course registration, and more.`,
+        links: [{ label: 'Go to myCSUDH', url: 'https://my.csudh.edu' }],
+      },
+      {
+        title: 'Employee Email (Outlook)',
+        summary: 'Send and receive official campus communications.',
+        details: `All employees receive Outlook-based email accounts through Microsoft 365.`,
+        links: [{ label: 'Access Webmail', url: 'https://outlook.office365.com' }],
+      },
+      {
+        title: 'Toropay (Student Payments)',
+        summary: 'Secure student account billing and payments.',
+        details: `Toropay provides real-time access to tuition billing and payment history.`,
+        links: [{ label: 'Access Toropay', url: 'https://toropay.csudh.edu' }],
+      },
+    ],
+  },
+
+  {
+    category: 'Communication & Learning Tools',
+    articles: [
+      // From Communication & Collaboration
+      {
+        title: 'Microsoft Teams',
+        summary: 'Chat and collaborate across campus using Teams.',
+        details: `Microsoft Teams is part of Office 365 and offers instant messaging, video conferencing, and file sharing.`,
+        links: [{ label: 'Open Microsoft Teams', url: 'https://teams.microsoft.com' }],
+      },
+      {
+        title: 'Zoom Meetings',
+        summary: 'Host video meetings, webinars, and record lectures.',
+        details: `Zoom supports classes, office hours, remote meetings, and lecture capture across platforms.`,
+        links: [{ label: 'Log in to Zoom', url: 'https://csudh.zoom.us' }],
+      },
+      {
+        title: 'LinkedIn Learning',
+        summary: 'Access expert-led tutorials for software and skills.',
+        details: `All students, faculty, and staff have free access to LinkedIn Learning. Log in using your CSUDH credentials.`,
+        links: [{ label: 'Start Learning', url: 'https://www.linkedin.com/learning-login/' }],
+      },
+      {
+        title: 'Clearspan Communicator',
+        summary: 'Use your campus extension on a mobile device.',
+        details: `Route and receive campus calls through your device. No need to forward from your office line.`,
+        links: [{ label: 'Clearspan Web Portal', url: 'https://csudh.clearspancloud.com' }],
+      },
+      // From Teaching & Learning
       {
         title: 'Canvas Learning Management System',
         summary: 'Use Canvas to manage coursework, assignments, and grades.',
@@ -220,7 +148,68 @@ export const knowledgeBaseData = [
   },
 
   {
-    category: 'TV & Media Production',
+    category: 'Hardware & Software Resources',
+    articles: [
+      {
+        title: 'Adobe Creative Cloud',
+        summary: 'Get access to Photoshop, Illustrator, InDesign and more.',
+        details: `CSUDH provides Creative Cloud licenses to students, faculty, and staff for creative and academic work.`,
+        links: [{ label: 'Download Adobe CC', url: 'https://www.csudh.edu/adobe' }],
+      },
+      {
+        title: 'Technology Checkout Program',
+        summary: 'Borrow laptops, webcams, and more.',
+        details: `Students can check out equipment needed for class assignments or remote learning.`,
+        links: [{ label: 'Tech Checkout Info', url: 'https://www.csudh.edu/it/checkout' }],
+      },
+      {
+        title: 'Microsoft 365 Access',
+        summary: 'Install Word, Excel, PowerPoint, Outlook, and more.',
+        details: `Available to all active CSUDH students and employees.`,
+        links: [{ label: 'Install Office', url: 'https://portal.office.com' }],
+      },
+    ],
+  },
+
+  {
+    category: 'Remote Access & Network',
+    articles: [
+      // From IT Continuity Resources
+      {
+        title: 'Secure VPN Access (GlobalProtect)',
+        summary: 'Use CSUDH VPN to access campus resources remotely.',
+        details: `The secure VPN allows employees to safely access university systems from home.`,
+        links: [{ label: 'Download GlobalProtect', url: 'https://www.csudh.edu/vpn' }],
+      },
+      {
+        title: 'Remote Desktop',
+        summary: 'Work remotely as if you’re on your campus desktop.',
+        details: `Use Remote Desktop in combination with VPN to access files, software, and resources securely.`,
+        links: [{ label: 'Remote Desktop Setup', url: 'https://www.csudh.edu/remote-access' }],
+      },
+      // From Network
+      {
+        title: 'Campus Wi-Fi (Eduroam)',
+        summary: 'Connect to wireless internet using your CSUDH credentials.',
+        details: `Select the 'eduroam' network and sign in with your full ToroMail address.`,
+        links: [{ label: 'Wi-Fi Setup Instructions', url: 'https://www.csudh.edu/wifi' }],
+      },
+      {
+        title: 'Ethernet Access',
+        summary: 'Use a wired connection in campus offices.',
+        details: `Ethernet offers the most stable connection and is recommended for critical use cases.`,
+        links: [{ label: 'Submit Ethernet Request', url: 'https://csudh.service-now.com' }],
+      },
+      {
+        title: 'Network Authentication Help',
+        summary: 'Learn about access requirements and validation steps.',
+        details: `Understand the terms: authentication, validation key, and what to expect when accessing secure networks.`,
+      },
+    ],
+  },
+
+  {
+    category: 'TV & Media Services',
     articles: [
       {
         title: 'Digital Media Services',
@@ -244,7 +233,7 @@ export const knowledgeBaseData = [
   },
 
   {
-    category: 'University Printing Services',
+    category: 'Printing Services',
     articles: [
       {
         title: 'How to Use ToroPrint',
@@ -270,9 +259,7 @@ Personal jobs must be paid with cash or check at the print shop.`,
         title: 'ToroPrint Video Tutorials',
         summary: 'Watch short videos on how to place orders using ToroPrint.',
         details: `Covers how to order exams, banners, and business cards.`,
-        links: [
-          { label: 'View Tutorials on YouTube', url: 'https://www.youtube.com/results?search_query=CSUDH+Toroprint' },
-        ],
+        links: [{ label: 'View Tutorials on YouTube', url: 'https://www.youtube.com/results?search_query=CSUDH+Toroprint' }],
       },
       {
         title: 'University Printing Services - FAQ',
