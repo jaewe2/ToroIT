@@ -68,6 +68,8 @@ npm install --save-dev @babel/core @babel/preset-env
 
 # Optional: Install Expo CLI globally (if not already installed)
 npm install -g expo-cli
+OR
+npm install -g npm@11.2.0
 
 # Optional: Clean up unused dependencies (e.g., bad-words)
 npm uninstall bad-words
