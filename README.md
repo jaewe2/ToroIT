@@ -83,6 +83,10 @@ npx expo install @react-native-async-storage/async-storage
 
 npm install react-native-dropdown-picker
 
+#needed for django axios (do this in react native project)
+
+npm install axios
+
 #needed for flash screens:
 
 npx expo install expo expo-font expo-linking expo-splash-screen expo-status-bar expo-system-ui expo-web-browser react react-dom react-native react-native-gesture-handler react-native-reanimated react-native-safe-area-context react-native-screens react-native-web @types/react jest-expo
