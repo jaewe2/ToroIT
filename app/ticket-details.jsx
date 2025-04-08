@@ -3,12 +3,10 @@ import {
   View, Text, StyleSheet, ScrollView,
   SafeAreaView, TextInput, TouchableOpacity,
   KeyboardAvoidingView, Platform, useColorScheme,
+  Alert
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Colors } from '@/constants/Colors';
-
-const STORAGE_KEY = 'USER_TICKETS';
 
 export default function TicketDetails() {
   const { id } = useLocalSearchParams();
@@ -19,75 +17,88 @@ export default function TicketDetails() {
   const [formState, setFormState] = useState({ title: '', category: '', description: '' });
   const theme = useColorScheme() === 'dark' ? Colors.dark : Colors.light;
 
-  const loadTicket = async () => {
-    try {
-      const stored = await AsyncStorage.getItem(STORAGE_KEY);
-      const tickets = stored ? JSON.parse(stored) : [];
-      const found = tickets.find((t) => t.id === id);
-      if (found) {
-        setTicket(found);
-        setFormState({
-          title: found.title,
-          category: found.category,
-          description: found.description,
-        });
-      }
-    } catch (err) {
-      console.error('Error loading ticket:', err);
-    }
-  };
+  useEffect(() => {
+    fetchTicket();
+  }, [id]);
 
-  const updateTicketInStorage = async (updatedTicket) => {
+  const fetchTicket = async () => {
     try {
-      const stored = await AsyncStorage.getItem(STORAGE_KEY);
-      let tickets = stored ? JSON.parse(stored) : [];
-      tickets = tickets.map((t) => (t.id === updatedTicket.id ? updatedTicket : t));
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(tickets));
+      const res = await fetch(`http://127.0.0.1:8000/api/tickets/${id}/`);
+      const data = await res.json();
+      setTicket(data);
+      setFormState({
+        title: data.title,
+        category: data.category,
+        description: data.description,
+      });
     } catch (err) {
-      console.error('Error updating ticket:', err);
+      console.error('Failed to load ticket:', err);
     }
   };
 
   const handleAddComment = async () => {
     if (!newComment.trim()) return;
-    const updatedTicket = {
-      ...ticket,
-      comments: [
-        ...(ticket.comments || []),
-        {
-          id: Date.now(),
-          text: newComment,
-          author: 'You',
-          time: new Date().toLocaleString(),
-        },
-      ],
-    };
-    setTicket(updatedTicket);
-    setNewComment('');
-    await updateTicketInStorage(updatedTicket);
+    try {
+      const res = await fetch(`http://127.0.0.1:8000/api/tickets/${id}/comment/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: newComment, author: 'You' }),
+      });
+      if (res.ok) {
+        setNewComment('');
+        fetchTicket();
+      }
+    } catch (err) {
+      console.error('Failed to add comment:', err);
+    }
   };
 
   const handleSaveEdits = async () => {
-    const updatedTicket = {
-      ...ticket,
-      ...formState,
-      history: [
-        ...(ticket.history || []),
-        {
-          id: Date.now(),
-          change: 'Ticket updated',
-          date: new Date().toLocaleString(),
-        },
-      ],
-    };
-    setTicket(updatedTicket);
-    setEditMode(false);
-    await updateTicketInStorage(updatedTicket);
+    try {
+      const res = await fetch(`http://127.0.0.1:8000/api/tickets/${id}/`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formState),
+      });
+      if (res.ok) {
+        setEditMode(false);
+        fetchTicket();
+      }
+    } catch (err) {
+      console.error('Failed to update ticket:', err);
+    }
   };
 
-  useEffect(() => {
-    if (id) loadTicket();
-  }, [id]);
+  const handleDelete = async () => {
+    const confirmed = window.confirm('Are you sure you want to delete this ticket?');
+    if (!confirmed) return;
+  
+    try {
+      console.log('Sending DELETE to:', `http://127.0.0.1:8000/api/tickets/${id}/`);
+      const res = await fetch(`http://127.0.0.1:8000/api/tickets/${id}/`, {
+        method: 'DELETE',
+        headers: {
+          'X-User-Role': 'admin',
+          'Content-Type': 'application/json',
+        },
+      });
+  
+      console.log('Status:', res.status);
+      const body = await res.text();
+      console.log('Response:', body);
+  
+      if (res.status === 204) {
+        alert('Ticket deleted successfully');
+        router.replace('/tickets');
+      } else {
+        alert(`Failed to delete. Status: ${res.status}\n${body}`);
+      }
+    } catch (err) {
+      console.error('Error deleting ticket:', err);
+      alert('Error deleting ticket: ' + err.message);
+    }
+  };
+  
 
   if (!ticket) {
     return (
@@ -101,7 +112,6 @@ export default function TicketDetails() {
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-
           {editMode ? (
             <>
               <TextInput
@@ -129,7 +139,7 @@ export default function TicketDetails() {
               <Text style={[styles.title, { color: theme.primary }]}>{ticket.title}</Text>
               <Text style={[styles.meta, { color: theme.textSecondary }]}>Status: {ticket.status}</Text>
               <Text style={[styles.meta, { color: theme.textSecondary }]}>Category: {ticket.category}</Text>
-              <Text style={[styles.meta, { color: theme.textSecondary }]}>Submitted: {ticket.submittedAt}</Text>
+              <Text style={[styles.meta, { color: theme.textSecondary }]}>Submitted: {ticket.submitted_at}</Text>
 
               <Text style={[styles.sectionHeader, { color: theme.text }]}>Description</Text>
               <Text style={[styles.description, { color: theme.text, backgroundColor: theme.card }]}>
@@ -139,6 +149,10 @@ export default function TicketDetails() {
               <TouchableOpacity onPress={() => setEditMode(true)} style={[styles.button, { backgroundColor: theme.secondary }]}>
                 <Text style={styles.buttonText}>Edit Ticket</Text>
               </TouchableOpacity>
+
+              <TouchableOpacity onPress={handleDelete} style={[styles.button, { backgroundColor: '#C62828' }]}>
+                <Text style={styles.buttonText}>Delete Ticket</Text>
+              </TouchableOpacity>
             </>
           )}
 
@@ -147,7 +161,7 @@ export default function TicketDetails() {
             <View key={c.id} style={[styles.commentCard, { backgroundColor: theme.card }]}>
               <Text style={[styles.commentAuthor, { color: theme.text }]}>{c.author}</Text>
               <Text style={[styles.commentText, { color: theme.text }]}>{c.text}</Text>
-              <Text style={[styles.commentTime, { color: theme.textSecondary }]}>{c.time}</Text>
+              <Text style={[styles.commentTime, { color: theme.textSecondary }]}>{c.created_at}</Text>
             </View>
           ))}
 

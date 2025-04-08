@@ -1,25 +1,15 @@
-
 import React, { useState, useEffect } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  TouchableOpacity,
-  SafeAreaView,
-  TextInput,
-  useColorScheme,
-  ScrollView,
-  Animated,
-  Vibration,
-  Modal,
+  View, Text, StyleSheet, FlatList, TouchableOpacity,
+  SafeAreaView, TextInput, useColorScheme, ScrollView,
+  Animated, Vibration, Modal,
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/Colors';
 import DropDownPicker from 'react-native-dropdown-picker';
 
-const STORAGE_KEY = 'USER_TICKETS';
+const API_BASE_URL = 'http://127.0.0.1:8000/api';
 
 export default function TicketsScreen() {
   const [tickets, setTickets] = useState([]);
@@ -34,7 +24,6 @@ export default function TicketsScreen() {
     { label: '📶 Network Issue', value: 'Network Issue' },
     { label: '❓ Other', value: 'Other' },
   ]);
-
   const [successMessage, setSuccessMessage] = useState('');
   const [fadeAnim] = useState(new Animated.Value(0));
 
@@ -47,10 +36,10 @@ export default function TicketsScreen() {
 
   const loadTickets = async () => {
     try {
-      const stored = await AsyncStorage.getItem(STORAGE_KEY);
-      if (stored) setTickets(JSON.parse(stored));
+      const res = await axios.get(`${API_BASE_URL}/tickets/`);
+      setTickets(res.data);
     } catch (err) {
-      console.error('Error loading tickets:', err);
+      console.error('Error loading tickets from API:', err);
     }
   };
 
@@ -66,44 +55,38 @@ export default function TicketsScreen() {
   const handleCreateTicket = async () => {
     if (!validate()) return;
 
-    const newId = Date.now().toString();
     const entry = {
       ...newTicket,
-      id: newId,
       status: 'Open',
-      submittedAt: new Date().toLocaleString(),
-      comments: [],
-      history: [
-        { id: Date.now(), change: 'Ticket created', date: new Date().toLocaleString() },
-      ],
+      submittedAt: new Date().toISOString(),
     };
 
-    const stored = await AsyncStorage.getItem(STORAGE_KEY);
-    const current = stored ? JSON.parse(stored) : [];
-    const updated = [...current, entry];
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    try {
+      const res = await axios.post(`${API_BASE_URL}/tickets/`, entry);
+      setTickets(prev => [res.data, ...prev]);
+      setNewTicket({ title: '', category: '', description: '' });
+      setShowModal(false);
+      setOpen(false);
+      setErrors({});
 
-    setTickets(updated);
-    setNewTicket({ title: '', category: '', description: '' });
-    setShowModal(false);
-    setOpen(false);
-    setErrors({});
-
-    Vibration.vibrate(100);
-    setSuccessMessage('Ticket submitted successfully!');
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 300,
-      useNativeDriver: true,
-    }).start(() => {
-      setTimeout(() => {
-        Animated.timing(fadeAnim, {
-          toValue: 0,
-          duration: 300,
-          useNativeDriver: true,
-        }).start(() => setSuccessMessage(''));
-      }, 2000);
-    });
+      Vibration.vibrate(100);
+      setSuccessMessage('Ticket submitted successfully!');
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }).start(() => {
+        setTimeout(() => {
+          Animated.timing(fadeAnim, {
+            toValue: 0,
+            duration: 300,
+            useNativeDriver: true,
+          }).start(() => setSuccessMessage(''));
+        }, 2000);
+      });
+    } catch (err) {
+      console.error('Error submitting ticket:', err);
+    }
   };
 
   const getStatusColor = (status) => {
@@ -124,7 +107,9 @@ export default function TicketsScreen() {
         <Text style={[styles.cardTitle, { color: theme.text }]}>{item.title}</Text>
         <Text style={[styles.status, { color: getStatusColor(item.status) }]}>{item.status}</Text>
       </View>
-      <Text style={[styles.meta, { color: theme.textSecondary }]}> {item.category} • Submitted: {item.submittedAt} </Text>
+      <Text style={[styles.meta, { color: theme.textSecondary }]}>
+        {item.category} • Submitted: {new Date(item.submitted_at).toLocaleString()}
+      </Text>
     </TouchableOpacity>
   );
 
@@ -147,7 +132,7 @@ export default function TicketsScreen() {
 
       <FlatList
         data={tickets}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={styles.list}
         renderItem={renderTicket}
         ListEmptyComponent={
@@ -166,11 +151,7 @@ export default function TicketsScreen() {
                 value={newTicket.title}
                 onChangeText={(text) => setNewTicket((prev) => ({ ...prev, title: text }))}
                 placeholderTextColor={theme.textSecondary}
-                style={[styles.input, {
-                  color: theme.text,
-                  borderColor: errors.title ? '#C62828' : theme.inputBorder,
-                  backgroundColor: theme.card,
-                }]}
+                style={[styles.input, { color: theme.text, borderColor: errors.title ? '#C62828' : theme.inputBorder, backgroundColor: theme.card }]}
               />
               {errors.title && <Text style={styles.error}>{errors.title}</Text>}
 
@@ -180,9 +161,7 @@ export default function TicketsScreen() {
                   value={newTicket.category}
                   items={categoryItems}
                   setOpen={setOpen}
-                  setValue={(callback) =>
-                    setNewTicket((prev) => ({ ...prev, category: callback(prev.category) }))
-                  }
+                  setValue={(callback) => setNewTicket((prev) => ({ ...prev, category: callback(prev.category) }))}
                   setItems={setCategoryItems}
                   placeholder="Select a Category"
                   style={{ backgroundColor: theme.card, borderColor: errors.category ? '#C62828' : theme.inputBorder, marginTop: 12 }}
@@ -208,10 +187,7 @@ export default function TicketsScreen() {
               />
               {errors.description && <Text style={styles.error}>{errors.description}</Text>}
 
-              <TouchableOpacity
-                style={[styles.button, { backgroundColor: theme.primary }]}
-                onPress={handleCreateTicket}
-              >
+              <TouchableOpacity style={[styles.button, { backgroundColor: theme.primary }]} onPress={handleCreateTicket}>
                 <Text style={styles.buttonText}>Submit Ticket</Text>
               </TouchableOpacity>
 
@@ -220,104 +196,34 @@ export default function TicketsScreen() {
               </TouchableOpacity>
             </ScrollView>
           </View>
-                </View>
+        </View>
       </Modal>
-      }
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  heading: {
-    fontSize: 26,
-    fontWeight: 'bold',
-    marginTop: 24,
-    marginBottom: 16,
-    textAlign: 'center',
-  },
+  heading: { fontSize: 26, fontWeight: 'bold', marginTop: 24, marginBottom: 16, textAlign: 'center' },
   button: {
-    marginHorizontal: 20,
-    marginBottom: 20,
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginTop: 24,
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 3,
+    marginHorizontal: 20, marginBottom: 20, padding: 16, borderRadius: 12,
+    alignItems: 'center', marginTop: 24, shadowColor: '#000', shadowOpacity: 0.2,
+    shadowRadius: 4, shadowOffset: { width: 0, height: 2 }, elevation: 3,
   },
-  buttonText: {
-    color: '#fff',
-    fontWeight: '700',
-    fontSize: 17,
-  },
-  list: {
-    paddingHorizontal: 20,
-    paddingBottom: 40,
-  },
+  buttonText: { color: '#fff', fontWeight: '700', fontSize: 17 },
+  list: { paddingHorizontal: 20, paddingBottom: 40 },
   card: {
-    padding: 18,
-    borderRadius: 14,
-    marginBottom: 18,
-    shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 3,
+    padding: 18, borderRadius: 14, marginBottom: 18, shadowColor: '#000',
+    shadowOpacity: 0.08, shadowRadius: 6, shadowOffset: { width: 0, height: 3 }, elevation: 3,
   },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 6,
-  },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  status: {
-    fontWeight: 'bold',
-  },
-  meta: {
-    fontSize: 13,
-  },
-  empty: {
-    fontSize: 16,
-    textAlign: 'center',
-    marginTop: 40,
-  },
-  fullscreenModal: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  modal: {
-    width: '100%',
-    borderRadius: 16,
-    padding: 24,
-    gap: 14,
-    maxHeight: '90%',
-  },
-  modalTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  input: {
-    borderWidth: 2,
-    borderRadius: 12,
-    padding: 14,
-    marginTop: 12,
-    fontSize: 16,
-  },
-  error: {
-    color: '#C62828',
-    fontSize: 13,
-    marginTop: 4,
-  },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
+  cardTitle: { fontSize: 16, fontWeight: '600' },
+  status: { fontWeight: 'bold' },
+  meta: { fontSize: 13 },
+  empty: { fontSize: 16, textAlign: 'center', marginTop: 40 },
+  fullscreenModal: { flex: 1, backgroundColor: 'rgba(0, 0, 0, 0.7)', justifyContent: 'center', alignItems: 'center', padding: 20 },
+  modal: { width: '100%', borderRadius: 16, padding: 24, gap: 14, maxHeight: '90%' },
+  modalTitle: { fontSize: 22, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
+  input: { borderWidth: 2, borderRadius: 12, padding: 14, marginTop: 12, fontSize: 16 },
+  error: { color: '#C62828', fontSize: 13, marginTop: 4 },
 });
