@@ -1,108 +1,134 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Alert } from 'react-native';
 import { router } from 'expo-router';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Base URL for Django backend
-const API_URL = 'http://127.0.0.1:8000/api/'; // Adjust for production or physical device (e.g., http://192.168.x.x:8000/api/)
+const API_URL = 'http://127.0.0.1:8000/api/'; // Change for production
 
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
 
+  // ------------------------------
+  // Load token & user on app start
+  // ------------------------------
+  useEffect(() => {
+    const loadSession = async () => {
+      try {
+        const storedToken = await AsyncStorage.getItem('token');
+        const storedUser = await AsyncStorage.getItem('user');
+        if (storedToken && storedUser) {
+          setToken(storedToken);
+          setUser(JSON.parse(storedUser));
+          setIsAuthenticated(true);
+          axios.defaults.headers.common['Authorization'] = `Token ${storedToken}`;
+        }
+      } catch (err) {
+        console.error('Error loading session:', err);
+      }
+    };
+    loadSession();
+  }, []);
+
+  // ------------------------------
+  // Login
+  // ------------------------------
   const login = async (values, { setSubmitting }) => {
     try {
-      console.log('Attempting login with:', {
+      const response = await axios.post(`${API_URL}login/`, {
         identifier: values.identifier,
         password: values.password,
       });
-      const response = await axios.post(`${API_URL}login/`, {
-        identifier: values.identifier, // Matches Login.js field
-        password: values.password,
-      }, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      console.log('Login response:', response.data);
-      // Assuming the backend returns { message: "Login successful", user_id: <id> }
-      setUser({ id: response.data.user_id, username: values.identifier });
+
+      const { token, user_id, username, email, role } = response.data;
+      const userInfo = { id: user_id, username, email, role };
+
+      setToken(token);
+      setUser(userInfo);
       setIsAuthenticated(true);
-      Alert.alert('Success', `Logged in as ${values.identifier}`);
+
+      await AsyncStorage.setItem('token', token);
+      await AsyncStorage.setItem('user', JSON.stringify(userInfo));
+
+      axios.defaults.headers.common['Authorization'] = `Token ${token}`;
+      Alert.alert('Success', `Logged in as ${username}`);
       router.replace('/home');
-      return true;
     } catch (error) {
-      console.error('Login error:', {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-      });
-      Alert.alert('Error', `Failed to log in: ${error.response?.data?.error || error.message}`);
-      throw error; // Let Login.js handle further error logic (e.g., attempt counter)
+      console.error('Login error:', error?.response?.data || error.message);
+      Alert.alert('Login Failed', error?.response?.data?.error || 'Invalid credentials');
     } finally {
       setSubmitting(false);
     }
   };
 
-  const register = async (values, username, { setSubmitting }) => {
+  // ------------------------------
+  // Register
+  // ------------------------------
+  const register = async (values, suggestedUsername, { setSubmitting }) => {
     try {
-      console.log('Attempting registration with:', {
-        username,
-        email: values.email,
-        password: values.password,
-      });
       const response = await axios.post(`${API_URL}register/`, {
-        username: username,
+        username: suggestedUsername,
         email: values.email,
         password: values.password,
-      }, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
       });
-      console.log('Registration response:', response.data);
-      // Assuming the backend returns { id, username, email }
-      setUser({ id: response.data.id, username: response.data.username, email: response.data.email });
+
+      const { id, username, email, role, token } = response.data;
+      const userInfo = { id, username, email, role };
+
+      setToken(token);
+      setUser(userInfo);
       setIsAuthenticated(true);
-      Alert.alert('Success', 'Registration successful! Redirecting to Home.');
+
+      await AsyncStorage.setItem('token', token);
+      await AsyncStorage.setItem('user', JSON.stringify(userInfo));
+
+      axios.defaults.headers.common['Authorization'] = `Token ${token}`;
+      Alert.alert('Account Created', `Welcome! Your username is: ${username}`);
       router.replace('/home');
-      return true;
     } catch (error) {
-      console.error('Registration error:', {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-      });
-      Alert.alert('Error', `Registration failed: ${error.response?.data?.email || error.response?.data?.non_field_errors || error.message}`);
-      return false;
+      console.error('Registration error:', error?.response?.data || error.message);
+      const errorMsg =
+        error?.response?.data?.email ||
+        error?.response?.data?.username ||
+        error?.response?.data?.password ||
+        'Registration failed.';
+      Alert.alert('Registration Failed', errorMsg);
     } finally {
       setSubmitting(false);
     }
   };
 
+  // ------------------------------
+  // Logout
+  // ------------------------------
   const logout = () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to log out?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Yes',
-          onPress: () => {
+    Alert.alert('Logout', 'Are you sure you want to log out?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Yes',
+        onPress: async () => {
+          try {
             setUser(null);
+            setToken(null);
             setIsAuthenticated(false);
+            await AsyncStorage.removeItem('token');
+            await AsyncStorage.removeItem('user');
+            delete axios.defaults.headers.common['Authorization'];
             router.replace('/index');
-          },
+          } catch (err) {
+            console.error('Logout error:', err);
+          }
         },
-      ],
-      { cancelable: true }
-    );
+      },
+    ]);
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, login, register, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, user, token, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );

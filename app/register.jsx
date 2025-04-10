@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   View,
@@ -29,33 +29,47 @@ const RegisterSchema = Yup.object().shape({
 export default function Register() {
   const { register } = useAuth();
   const [username, setUsername] = useState('');
+  const [checking, setChecking] = useState(false);
   const colorScheme = useColorScheme();
   const theme = colorScheme === 'dark' ? Colors.dark : Colors.light;
 
-  const deriveUsername = (email) => {
-    const prefix = email.split('@')[0];
-    return prefix.length > 4 ? prefix.slice(0, 4) : prefix;
+  const checkAndSetUsername = async (email) => {
+    const prefix = email.split('@')[0].slice(0, 4);
+    if (!prefix) return;
+
+    setChecking(true);
+    try {
+      const res = await fetch('http://127.0.0.1:8000/api/users/');
+      const data = await res.json();
+      let candidate = prefix;
+      let counter = 1;
+
+      const usernames = new Set(data.map((user) => user.username));
+      while (usernames.has(candidate)) {
+        counter += 1;
+        candidate = `${prefix}${counter}`;
+      }
+
+      setUsername(candidate);
+    } catch (err) {
+      console.error('Username availability check failed:', err);
+    } finally {
+      setChecking(false);
+    }
   };
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={styles.logoWrap}>
-        <Image
-          source={require('../assets/images/toro-mascot.png')}
-          style={styles.logo}
-        />
-        <Text style={[styles.title, { color: theme.primary }]}>
-          Register for Toro IT
-        </Text>
+        <Image source={require('../assets/images/toro-mascot.png')} style={styles.logo} />
+        <Text style={[styles.title, { color: theme.primary }]}>Register for Toro IT</Text>
       </View>
 
       <Formik
         initialValues={{ email: '', password: '', confirmPassword: '' }}
         validationSchema={RegisterSchema}
         onSubmit={(values, { setSubmitting }) => {
-          const uname = deriveUsername(values.email);
-          setUsername(uname);
-          register(values, uname, { setSubmitting });
+          register(values, username, { setSubmitting });
         }}
       >
         {({
@@ -69,20 +83,15 @@ export default function Register() {
           isSubmitting,
         }) => (
           <View style={styles.form}>
+            {/* Email */}
             <TextInput
-              style={[
-                styles.input,
-                {
-                  borderColor: theme.inputBorder,
-                  color: theme.text,
-                },
-              ]}
+              style={[styles.input, { borderColor: theme.inputBorder, color: theme.text }]}
               placeholder="CSUDH Email"
               placeholderTextColor={theme.textSecondary}
               value={values.email}
               onChangeText={(text) => {
                 setFieldValue('email', text);
-                setUsername(deriveUsername(text));
+                checkAndSetUsername(text);
               }}
               onBlur={handleBlur('email')}
               keyboardType="email-address"
@@ -92,26 +101,20 @@ export default function Register() {
               <Text style={styles.error}>{errors.email}</Text>
             )}
 
-            {/* Username Display */}
+            {/* Username Preview */}
             {username ? (
               <View style={[styles.usernameBox, { borderColor: theme.primary, backgroundColor: theme.card }]}>
-                <Text style={[styles.usernameLabel, { color: theme.primary }]}>
-                  Your Toro Username:
-                </Text>
-                <Text style={[styles.usernameValue, { color: theme.secondary }]}>
-                  {username}
-                </Text>
+                <Text style={[styles.usernameLabel, { color: theme.primary }]}>Your Toro Username:</Text>
+                <Text style={[styles.usernameValue, { color: theme.secondary }]}>{username}</Text>
+                {checking && (
+                  <Text style={styles.usernameChecking}>Checking availability...</Text>
+                )}
               </View>
             ) : null}
 
+            {/* Password */}
             <TextInput
-              style={[
-                styles.input,
-                {
-                  borderColor: theme.inputBorder,
-                  color: theme.text,
-                },
-              ]}
+              style={[styles.input, { borderColor: theme.inputBorder, color: theme.text }]}
               placeholder="Password"
               placeholderTextColor={theme.textSecondary}
               value={values.password}
@@ -123,14 +126,9 @@ export default function Register() {
               <Text style={styles.error}>{errors.password}</Text>
             )}
 
+            {/* Confirm Password */}
             <TextInput
-              style={[
-                styles.input,
-                {
-                  borderColor: theme.inputBorder,
-                  color: theme.text,
-                },
-              ]}
+              style={[styles.input, { borderColor: theme.inputBorder, color: theme.text }]}
               placeholder="Confirm Password"
               placeholderTextColor={theme.textSecondary}
               value={values.confirmPassword}
@@ -142,10 +140,11 @@ export default function Register() {
               <Text style={styles.error}>{errors.confirmPassword}</Text>
             )}
 
+            {/* Register Button */}
             <TouchableOpacity
               style={[styles.button, { backgroundColor: theme.primary }]}
               onPress={handleSubmit}
-              disabled={isSubmitting}
+              disabled={isSubmitting || !username || checking}
             >
               {isSubmitting ? (
                 <ActivityIndicator size="small" color="#fff" />
@@ -154,13 +153,8 @@ export default function Register() {
               )}
             </TouchableOpacity>
 
-            <TouchableOpacity
-              onPress={() => router.replace('/')}
-              style={styles.link}
-            >
-              <Text style={[styles.linkText, { color: theme.secondary }]}>
-                Back to Login
-              </Text>
+            <TouchableOpacity onPress={() => router.replace('/')} style={styles.link}>
+              <Text style={[styles.linkText, { color: theme.secondary }]}>Back to Login</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -198,6 +192,11 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginTop: 4,
   },
+  usernameChecking: {
+    fontSize: 12,
+    color: '#FFA000',
+    marginTop: 4,
+  },
   button: {
     padding: 14,
     borderRadius: 10,
@@ -222,3 +221,4 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
 });
+
