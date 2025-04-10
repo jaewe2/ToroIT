@@ -93,7 +93,9 @@ export default function Register() {
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={styles.logoWrap}>
-        <Image source={require('../assets/images/toro-mascot.png')} style={styles.logo} />
+        <View style={styles.mascotContainer}>
+          <Image source={require('../assets/images/toro-mascot.png')} style={styles.logo} />
+        </View>
         <Text style={[styles.title, { color: theme.primary }]}>Register for Toro IT</Text>
       </View>
 
@@ -134,10 +136,21 @@ export default function Register() {
 
               {/* Username Preview */}
               {username ? (
-                <View style={[styles.usernameBox, { borderColor: theme.primary, backgroundColor: theme.card }]}>
-                  <Text style={[styles.usernameLabel, { color: theme.primary }]}>Your Toro Username:</Text>
-                  <Text style={[styles.usernameValue, { color: theme.secondary }]}>{username}</Text>
-                  {checking && <Text style={styles.usernameChecking}>Checking availability...</Text>}
+                <View
+                  style={[
+                    styles.usernameBox,
+                    { borderColor: theme.primary, backgroundColor: theme.card },
+                  ]}
+                >
+                  <Text style={[styles.usernameLabel, { color: theme.primary }]}>
+                    Your Toro Username:
+                  </Text>
+                  <Text style={[styles.usernameValue, { color: theme.secondary }]}>
+                    {username}
+                  </Text>
+                  {checking && (
+                    <Text style={styles.usernameChecking}>Checking availability...</Text>
+                  )}
                 </View>
               ) : null}
 
@@ -201,7 +214,9 @@ export default function Register() {
             {isSubmitting && (
               <View style={styles.loadingOverlay}>
                 <ActivityIndicator size="large" color={theme.primary} />
-                <Text style={{ color: theme.text, marginTop: 10 }}>Creating your account...</Text>
+                <Text style={{ color: theme.text, marginTop: 10 }}>
+                  Creating your account...
+                </Text>
               </View>
             )}
           </>
@@ -213,9 +228,27 @@ export default function Register() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: 'center', paddingHorizontal: 24 },
-  logoWrap: { alignItems: 'center', marginBottom: 32 },
-  logo: { width: 80, height: 80, marginBottom: 10 },
-  title: { fontSize: 26, fontWeight: 'bold' },
+  logoWrap: { alignItems: 'center', marginBottom: 24 },
+  mascotContainer: {
+    backgroundColor: '#fff',
+    padding: 16,
+    borderRadius: 20,
+    marginBottom: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  logo: {
+    width: 160,
+    height: 160,
+    resizeMode: 'contain',
+    borderRadius: 12,
+  },
+  title: { fontSize: 24, fontWeight: 'bold', textAlign: 'center' },
   form: {},
   input: {
     height: 50,
