@@ -60,6 +60,9 @@ npx expo install @expo/vector-icons expo-image
 # Form and validation dependencies
 npm install formik yup
 
+# toast (screen pop up)
+npm install react-native-toast-message
+
 # Optional: For environment variables (if using a .env file)
 npm install dotenv
 
