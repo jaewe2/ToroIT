@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Alert } from 'react-native';
 import { router } from 'expo-router';
 import axios from 'axios';
+import Toast from 'react-native-toast-message';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const API_URL = 'http://127.0.0.1:8000/api/'; // Change for production
@@ -55,11 +55,24 @@ export function AuthProvider({ children }) {
       await AsyncStorage.setItem('user', JSON.stringify(userInfo));
 
       axios.defaults.headers.common['Authorization'] = `Token ${token}`;
-      Alert.alert('Success', `Logged in as ${username}`);
+      Toast.show({
+        type: 'success',
+        text1: 'Login Successful',
+        text2: `Welcome, ${username}!`,
+        text1Style: { fontSize: 16, fontWeight: 'bold', color: '#800000' },
+        text2Style: { fontSize: 14, color: '#333' },
+      });
+
       router.replace('/home');
     } catch (error) {
       console.error('Login error:', error?.response?.data || error.message);
-      Alert.alert('Login Failed', error?.response?.data?.error || 'Invalid credentials');
+      Toast.show({
+        type: 'error',
+        text1: 'Login Failed',
+        text2: error?.response?.data?.error || 'Invalid credentials',
+        text1Style: { fontSize: 16, fontWeight: 'bold', color: '#C62828' },
+        text2Style: { fontSize: 14, color: '#444' },
+      });
     } finally {
       setSubmitting(false);
     }
@@ -87,7 +100,14 @@ export function AuthProvider({ children }) {
       await AsyncStorage.setItem('user', JSON.stringify(userInfo));
 
       axios.defaults.headers.common['Authorization'] = `Token ${token}`;
-      Alert.alert('Account Created', `Welcome! Your username is: ${username}`);
+      Toast.show({
+        type: 'success',
+        text1: 'Registration Successful',
+        text2: `Welcome, ${username}!`,
+        text1Style: { fontSize: 16, fontWeight: 'bold', color: '#800000' },
+        text2Style: { fontSize: 14, color: '#333' },
+      });
+
       router.replace('/home');
     } catch (error) {
       console.error('Registration error:', error?.response?.data || error.message);
@@ -96,39 +116,61 @@ export function AuthProvider({ children }) {
         error?.response?.data?.username ||
         error?.response?.data?.password ||
         'Registration failed.';
-      Alert.alert('Registration Failed', errorMsg);
+      Toast.show({
+        type: 'error',
+        text1: 'Registration Failed',
+        text2: errorMsg,
+        text1Style: { fontSize: 16, fontWeight: 'bold', color: '#C62828' },
+        text2Style: { fontSize: 14, color: '#444' },
+      });
     } finally {
       setSubmitting(false);
     }
   };
 
   // ------------------------------
-  // Logout
+  // Logout (Styled with Toro Toast)
   // ------------------------------
-  const logout = () => {
-    Alert.alert('Logout', 'Are you sure you want to log out?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Yes',
-        onPress: async () => {
-          try {
-            setUser(null);
-            setToken(null);
-            setIsAuthenticated(false);
-            await AsyncStorage.removeItem('token');
-            await AsyncStorage.removeItem('user');
-            delete axios.defaults.headers.common['Authorization'];
-            router.replace('/index');
-          } catch (err) {
-            console.error('Logout error:', err);
-          }
+  const logout = async () => {
+    console.log('Logout started');
+    try {
+      setUser(null);
+      setToken(null);
+      setIsAuthenticated(false);
+
+      await AsyncStorage.removeItem('token');
+      await AsyncStorage.removeItem('user');
+      delete axios.defaults.headers.common['Authorization'];
+      console.log('Auth cleared');
+
+      Toast.show({
+        type: 'success',
+        text1: 'Logged Out',
+        text2: 'See you again soon!',
+        position: 'top',
+        visibilityTime: 2500,
+        text1Style: {
+          fontSize: 16,
+          fontWeight: 'bold',
+          color: '#800000', // Maroon
         },
-      },
-    ]);
+        text2Style: {
+          fontSize: 14,
+          color: '#555',
+        },
+      });
+
+      router.replace('/');
+      console.log('Navigated to /');
+    } catch (err) {
+      console.error('Logout error:', err);
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, token, login, register, logout }}>
+    <AuthContext.Provider
+      value={{ isAuthenticated, user, token, login, register, logout }}
+    >
       {children}
     </AuthContext.Provider>
   );

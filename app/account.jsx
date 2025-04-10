@@ -1,5 +1,11 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, useColorScheme } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  useColorScheme,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from './auth-context';
 import { Colors } from '@/constants/Colors';
@@ -8,6 +14,11 @@ export default function Account() {
   const { user, logout } = useAuth();
   const colorScheme = useColorScheme();
   const theme = colorScheme === 'dark' ? Colors.dark : Colors.light;
+
+  const handleLogout = () => {
+    console.log('Logout button pressed');
+    logout(); // Directly call logout (make sure this is working in auth-context)
+  };
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
@@ -26,8 +37,11 @@ export default function Account() {
           </View>
 
           <TouchableOpacity
-            style={[styles.logoutButton, { borderColor: theme.primary, backgroundColor: theme.card }]}
-            onPress={logout}
+            style={[
+              styles.logoutButton,
+              { borderColor: theme.primary, backgroundColor: theme.card },
+            ]}
+            onPress={handleLogout}
             accessibilityLabel="Log out"
           >
             <Text style={[styles.logoutText, { color: theme.primary }]}>Logout</Text>
