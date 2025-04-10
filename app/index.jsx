@@ -75,6 +75,11 @@ export default function Login() {
         setErrors({
           password: `Login failed. ${MAX_ATTEMPTS - newAttempts} attempts remaining.`,
         });
+        Toast.show({
+          type: 'error',
+          text1: 'Login Failed',
+          text2: 'Please check your credentials.',
+        });
       }
     } finally {
       setSubmitting(false);
@@ -108,76 +113,86 @@ export default function Login() {
           }, []);
 
           return (
-            <View style={styles.form}>
-              <TextInput
-                style={[
-                  styles.input,
-                  { borderColor: theme.inputBorder, color: theme.text },
-                ]}
-                placeholder="Username or Email"
-                placeholderTextColor={theme.textSecondary}
-                value={values.identifier}
-                onChangeText={handleChange('identifier')}
-                onBlur={handleBlur('identifier')}
-                autoCapitalize="none"
-                autoComplete="username"
-                textContentType="username"
-              />
-              {touched.identifier && errors.identifier && (
-                <Text style={styles.error}>{errors.identifier}</Text>
-              )}
-
-              <TextInput
-                style={[
-                  styles.input,
-                  { borderColor: theme.inputBorder, color: theme.text },
-                ]}
-                placeholder="Password"
-                placeholderTextColor={theme.textSecondary}
-                value={values.password}
-                onChangeText={handleChange('password')}
-                onBlur={handleBlur('password')}
-                secureTextEntry={!showPassword}
-                autoComplete="password"
-                textContentType="password"
-              />
-              {touched.password && errors.password && (
-                <Text style={styles.error}>{errors.password}</Text>
-              )}
-
-              <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                <Text style={{ color: theme.secondary, marginBottom: 8 }}>
-                  {showPassword ? 'Hide' : 'Show'} Password
-                </Text>
-              </TouchableOpacity>
-
-              <View style={styles.rememberMe}>
-                <Text style={{ color: theme.text }}>Remember Me</Text>
-                <Switch
-                  value={rememberMe}
-                  onValueChange={setRememberMe}
-                  thumbColor={rememberMe ? theme.primary : '#ccc'}
+            <>
+              <View style={styles.form}>
+                <TextInput
+                  style={[
+                    styles.input,
+                    { borderColor: theme.inputBorder, color: theme.text },
+                  ]}
+                  placeholder="Username or Email"
+                  placeholderTextColor={theme.textSecondary}
+                  value={values.identifier}
+                  onChangeText={handleChange('identifier')}
+                  onBlur={handleBlur('identifier')}
+                  autoCapitalize="none"
+                  autoComplete="username"
+                  textContentType="username"
                 />
+                {touched.identifier && errors.identifier && (
+                  <Text style={styles.error}>{errors.identifier}</Text>
+                )}
+
+                <TextInput
+                  style={[
+                    styles.input,
+                    { borderColor: theme.inputBorder, color: theme.text },
+                  ]}
+                  placeholder="Password"
+                  placeholderTextColor={theme.textSecondary}
+                  value={values.password}
+                  onChangeText={handleChange('password')}
+                  onBlur={handleBlur('password')}
+                  secureTextEntry={!showPassword}
+                  autoComplete="password"
+                  textContentType="password"
+                />
+                {touched.password && errors.password && (
+                  <Text style={styles.error}>{errors.password}</Text>
+                )}
+
+                <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                  <Text style={{ color: theme.secondary, marginBottom: 8 }}>
+                    {showPassword ? 'Hide' : 'Show'} Password
+                  </Text>
+                </TouchableOpacity>
+
+                <View style={styles.rememberMe}>
+                  <Text style={{ color: theme.text }}>Remember Me</Text>
+                  <Switch
+                    value={rememberMe}
+                    onValueChange={setRememberMe}
+                    thumbColor={rememberMe ? theme.primary : '#ccc'}
+                  />
+                </View>
+
+                <TouchableOpacity
+                  style={[styles.button, { backgroundColor: theme.primary }]}
+                  onPress={handleSubmit}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <Text style={styles.buttonText}>Login</Text>
+                  )}
+                </TouchableOpacity>
+
+                <Link href="/register" style={styles.link}>
+                  <Text style={[styles.linkText, { color: theme.secondary }]}>
+                    Need an account? Register
+                  </Text>
+                </Link>
               </View>
 
-              <TouchableOpacity
-                style={[styles.button, { backgroundColor: theme.primary }]}
-                onPress={handleSubmit}
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? (
-                  <ActivityIndicator size="small" color="#fff" />
-                ) : (
-                  <Text style={styles.buttonText}>Login</Text>
-                )}
-              </TouchableOpacity>
-
-              <Link href="/register" style={styles.link}>
-                <Text style={[styles.linkText, { color: theme.secondary }]}>
-                  Need an account? Register
-                </Text>
-              </Link>
-            </View>
+              {/* Full-screen loading overlay */}
+              {isSubmitting && (
+                <View style={styles.loadingOverlay}>
+                  <ActivityIndicator size="large" color={theme.primary} />
+                  <Text style={{ color: theme.text, marginTop: 10 }}>Logging you in...</Text>
+                </View>
+              )}
+            </>
           );
         }}
       </Formik>
@@ -226,5 +241,16 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 12,
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
   },
 });
