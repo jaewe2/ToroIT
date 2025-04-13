@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
@@ -9,6 +10,7 @@ import {
   Image,
   useColorScheme,
   Switch,
+  Linking,
 } from 'react-native';
 import { Link, router } from 'expo-router';
 import { Formik } from 'formik';
@@ -57,33 +59,52 @@ export default function Login() {
         await AsyncStorage.removeItem('savedPassword');
       }
 
-      await login(values, { setSubmitting });
+      const success = await login(values);
 
-      Toast.show({
-        type: 'success',
-        text1: 'Login Successful',
-        text2: 'Welcome back!',
-      });
-    } catch (error) {
-      const newAttempts = loginAttempts + 1;
-      setLoginAttempts(newAttempts);
-
-      if (newAttempts >= MAX_ATTEMPTS) {
-        router.push('https://www.csudh.edu/password/');
-        setLoginAttempts(0);
-      } else {
-        setErrors({
-          password: `Login failed. ${MAX_ATTEMPTS - newAttempts} attempts remaining.`,
-        });
+      if (success) {
         Toast.show({
-          type: 'error',
-          text1: 'Login Failed',
-          text2: 'Please check your credentials.',
+          type: 'success',
+          text1: 'Login Successful',
+          text2: 'Welcome back!',
         });
+        setLoginAttempts(0);
+        router.replace('/home');
+      } else {
+        const newAttempts = loginAttempts + 1;
+        setLoginAttempts(newAttempts);
+
+        if (newAttempts >= MAX_ATTEMPTS) {
+          Toast.show({
+            type: 'error',
+            text1: 'Too Many Failed Attempts',
+            text2: 'Please reset your password.',
+          });
+        } else {
+          const remaining = MAX_ATTEMPTS - newAttempts;
+          setErrors({
+            password: `Incorrect password. ${remaining} attempt${remaining === 1 ? '' : 's'} remaining.`,
+          });
+          Toast.show({
+            type: 'error',
+            text1: 'Login Failed',
+            text2: `${remaining} attempt${remaining === 1 ? '' : 's'} left before reset.`,
+          });
+        }
       }
+    } catch (error) {
+      console.error('Unexpected login error:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Login Error',
+        text2: 'An unexpected error occurred.',
+      });
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const openForgotPassword = () => {
+    Linking.openURL('https://www.csudh.edu/password/');
   };
 
   return (
@@ -156,6 +177,13 @@ export default function Login() {
                   <Text style={styles.error}>{errors.password}</Text>
                 )}
 
+                {loginAttempts > 0 && loginAttempts < MAX_ATTEMPTS && (
+                  <Text style={{ color: theme.secondary, marginBottom: 8 }}>
+                    {MAX_ATTEMPTS - loginAttempts} attempt
+                    {MAX_ATTEMPTS - loginAttempts === 1 ? '' : 's'} remaining.
+                  </Text>
+                )}
+
                 <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
                   <Text style={{ color: theme.secondary, marginBottom: 8 }}>
                     {showPassword ? 'Hide' : 'Show'} Password
@@ -188,12 +216,20 @@ export default function Login() {
                     Need an account? Register
                   </Text>
                 </Link>
+
+                <TouchableOpacity onPress={openForgotPassword} style={styles.link}>
+                  <Text style={[styles.linkText, { color: theme.secondary }]}>
+                    Forgot password?
+                  </Text>
+                </TouchableOpacity>
               </View>
 
               {isSubmitting && (
                 <View style={styles.loadingOverlay}>
                   <ActivityIndicator size="large" color={theme.primary} />
-                  <Text style={{ color: theme.text, marginTop: 10 }}>Logging you in...</Text>
+                  <Text style={{ color: theme.text, marginTop: 10 }}>
+                    Logging you in...
+                  </Text>
                 </View>
               )}
             </>
@@ -247,11 +283,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   link: {
-    marginTop: 16,
+    marginTop: 12,
     alignSelf: 'center',
   },
   linkText: {
     fontSize: 15,
+    textDecorationLine: 'underline',
   },
   error: {
     color: '#C62828',

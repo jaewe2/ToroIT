@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { router } from 'expo-router';
 import axios from 'axios';
-import Toast from 'react-native-toast-message';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const API_URL = 'http://127.0.0.1:8000/api/'; // Change for production
@@ -37,11 +36,11 @@ export function AuthProvider({ children }) {
   // ------------------------------
   // Login
   // ------------------------------
-  const login = async (values, { setSubmitting }) => {
+  const login = async ({ identifier, password }) => {
     try {
       const response = await axios.post(`${API_URL}login/`, {
-        identifier: values.identifier,
-        password: values.password,
+        identifier,
+        password,
       });
 
       const { token, user_id, username, email, role } = response.data;
@@ -55,26 +54,11 @@ export function AuthProvider({ children }) {
       await AsyncStorage.setItem('user', JSON.stringify(userInfo));
 
       axios.defaults.headers.common['Authorization'] = `Token ${token}`;
-      Toast.show({
-        type: 'success',
-        text1: 'Login Successful',
-        text2: `Welcome, ${username}!`,
-        text1Style: { fontSize: 16, fontWeight: 'bold', color: '#800000' },
-        text2Style: { fontSize: 14, color: '#333' },
-      });
 
-      router.replace('/home');
+      return userInfo;
     } catch (error) {
       console.error('Login error:', error?.response?.data || error.message);
-      Toast.show({
-        type: 'error',
-        text1: 'Login Failed',
-        text2: error?.response?.data?.error || 'Invalid credentials',
-        text1Style: { fontSize: 16, fontWeight: 'bold', color: '#C62828' },
-        text2Style: { fontSize: 14, color: '#444' },
-      });
-    } finally {
-      setSubmitting(false);
+      throw new Error(error?.response?.data?.error || 'Invalid credentials');
     }
   };
 
@@ -100,15 +84,8 @@ export function AuthProvider({ children }) {
       await AsyncStorage.setItem('user', JSON.stringify(userInfo));
 
       axios.defaults.headers.common['Authorization'] = `Token ${token}`;
-      Toast.show({
-        type: 'success',
-        text1: 'Registration Successful',
-        text2: `Welcome, ${username}!`,
-        text1Style: { fontSize: 16, fontWeight: 'bold', color: '#800000' },
-        text2Style: { fontSize: 14, color: '#333' },
-      });
 
-      router.replace('/home');
+      return userInfo;
     } catch (error) {
       console.error('Registration error:', error?.response?.data || error.message);
       const errorMsg =
@@ -116,13 +93,7 @@ export function AuthProvider({ children }) {
         error?.response?.data?.username ||
         error?.response?.data?.password ||
         'Registration failed.';
-      Toast.show({
-        type: 'error',
-        text1: 'Registration Failed',
-        text2: errorMsg,
-        text1Style: { fontSize: 16, fontWeight: 'bold', color: '#C62828' },
-        text2Style: { fontSize: 14, color: '#444' },
-      });
+      throw new Error(Array.isArray(errorMsg) ? errorMsg[0] : errorMsg);
     } finally {
       setSubmitting(false);
     }
@@ -141,27 +112,9 @@ export function AuthProvider({ children }) {
       await AsyncStorage.removeItem('token');
       await AsyncStorage.removeItem('user');
       delete axios.defaults.headers.common['Authorization'];
+
       console.log('Auth cleared');
-
-      Toast.show({
-        type: 'success',
-        text1: 'Logged Out',
-        text2: 'See you again soon!',
-        position: 'top',
-        visibilityTime: 2500,
-        text1Style: {
-          fontSize: 16,
-          fontWeight: 'bold',
-          color: '#800000', // Maroon
-        },
-        text2Style: {
-          fontSize: 14,
-          color: '#555',
-        },
-      });
-
       router.replace('/');
-      console.log('Navigated to /');
     } catch (err) {
       console.error('Logout error:', err);
     }
