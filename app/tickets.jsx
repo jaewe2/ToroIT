@@ -1,3 +1,5 @@
+// TicketsScreen.jsx
+
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
@@ -58,12 +60,18 @@ export default function TicketsScreen() {
     const entry = {
       ...newTicket,
       status: 'Open',
-      submittedAt: new Date().toISOString(),
+      submitted_at: new Date().toISOString(),  // match API field
     };
 
     try {
       const res = await axios.post(`${API_BASE_URL}/tickets/`, entry);
-      setTickets(prev => [res.data, ...prev]);
+
+      // prepend new ticket safely, guarding prev
+      setTickets(prev => {
+        const list = Array.isArray(prev) ? prev : [];
+        return [res.data, ...list];
+      });
+
       setNewTicket({ title: '', category: '', description: '' });
       setShowModal(false);
       setOpen(false);

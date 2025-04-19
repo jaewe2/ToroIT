@@ -1,10 +1,39 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, ActivityIndicator, TouchableOpacity, StyleSheet } from 'react-native';
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  memo
+} from 'react';
+import {
+  View,
+  Text,
+  FlatList,
+  ActivityIndicator,
+  TouchableOpacity,
+  StyleSheet,
+  RefreshControl,
+  TextInput,
+} from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import Toast from 'react-native-toast-message';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useAuth } from './auth-context';  // adjust import path as needed
+import { useAuth } from './auth-context';
+
+const API_BASE = __DEV__
+  ? 'http://127.0.0.1:8000/api'
+  : 'https://your-production-api.com/api';
+
+const TicketRow = memo(({ ticket, onPress }) => (
+  <TouchableOpacity style={styles.ticketItem} onPress={() => onPress(ticket.id)}>
+    <Text style={styles.ticketTitle}>{ticket.title}</Text>
+    <Text style={styles.ticketMeta}>
+      Status: {ticket.status} | Category: {ticket.category} | Date:{' '}
+      {new Date(ticket.submitted_at).toLocaleDateString()}
+    </Text>
+  </TouchableOpacity>
+));
 
 export default function AdminTickets() {
   const router = useRouter();
@@ -13,51 +42,58 @@ export default function AdminTickets() {
   const [tickets, setTickets] = useState([]);
   const [statusFilter, setStatusFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
-  // Fetch tickets on component mount (only if user is admin)
-  useEffect(() => {
-    if (user?.role === 'admin') {
-      fetchTickets();
-    }
-  }, [user]);
-
-  // Fetch all tickets from API with authorization
-  const fetchTickets = async () => {
+  const fetchTickets = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/tickets/', {
-        headers: { Authorization: 'Bearer ' + token },
+      const params = [];
+      if (statusFilter !== 'all') params.push(`status=${statusFilter}`);
+      if (categoryFilter !== 'all') params.push(`category=${categoryFilter}`);
+      if (searchQuery.trim() !== '') params.push(`search=${encodeURIComponent(searchQuery.trim())}`);
+      const query = params.length ? `?${params.join('&')}` : '';
+
+      const res = await fetch(`${API_BASE}/tickets/${query}`, {
+        headers: {
+          Authorization: `Token ${token}`,
+          'Content-Type': 'application/json',
+        },
       });
-      if (!response.ok) {
-        throw new Error('Failed to fetch tickets');
-      }
-      const data = await response.json();
-      setTickets(data);
-    } catch (error) {
+
+      if (!res.ok) throw new Error(`Error ${res.status}`);
+      const json = await res.json();
+
+      const list = Array.isArray(json)
+        ? json
+        : Array.isArray(json.results)
+        ? json.results
+        : [];
+
+      setTickets(list);
+    } catch (err) {
       Toast.show({
         type: 'error',
         text1: 'Error fetching tickets',
-        text2: error.message || 'Please try again later',
+        text2: err.message || 'Please try again',
       });
     } finally {
       setLoading(false);
     }
-  };
+  }, [statusFilter, categoryFilter, searchQuery, token]);
 
-  // Apply filters to tickets whenever tickets or filter values change
-  const filteredTickets = tickets.filter(ticket => {
-    const statusMatch = statusFilter === 'all' || ticket.status === statusFilter;
-    const categoryMatch = categoryFilter === 'all' || ticket.category === categoryFilter;
-    return statusMatch && categoryMatch;
-  });
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchTickets();
+    setRefreshing(false);
+  }, [fetchTickets]);
 
-  // Handler for tapping on a ticket item
-  const handleTicketPress = (ticketId) => {
-    router.push(`/ticket-detail/${ticketId}`);
-  };
+  const categoryOptions = useMemo(
+    () => ['all', ...new Set(tickets.map(t => t.category).filter(Boolean))],
+    [tickets]
+  );
 
-  // If the user is not an admin, show an access denied message
   if (user?.role !== 'admin') {
     return (
       <SafeAreaView style={styles.container}>
@@ -66,16 +102,25 @@ export default function AdminTickets() {
     );
   }
 
-  // Unique category options for the Category picker (including an "All" option)
-  const categoryOptions = ['all', ...new Set(tickets.map(t => t.category).filter(Boolean))];
+  useEffect(() => {
+    fetchTickets();
+  }, [fetchTickets]);
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Filter dropdowns */}
+      {/* 🔍 Search */}
+      <TextInput
+        style={styles.searchInput}
+        placeholder="Search tickets..."
+        value={searchQuery}
+        onChangeText={setSearchQuery}
+      />
+
+      {/* 🧰 Filters */}
       <View style={styles.filterRow}>
         <Picker
           selectedValue={statusFilter}
-          onValueChange={(value) => setStatusFilter(value)}
+          onValueChange={setStatusFilter}
           style={[styles.picker, styles.pickerLeft]}
         >
           <Picker.Item label="All Statuses" value="all" />
@@ -83,81 +128,64 @@ export default function AdminTickets() {
           <Picker.Item label="In Progress" value="in_progress" />
           <Picker.Item label="Resolved" value="resolved" />
         </Picker>
-
         <Picker
           selectedValue={categoryFilter}
-          onValueChange={(value) => setCategoryFilter(value)}
+          onValueChange={setCategoryFilter}
           style={[styles.picker, styles.pickerRight]}
         >
           <Picker.Item label="All Categories" value="all" />
-          {categoryOptions.map((cat) => (
-            <Picker.Item 
-              key={cat} 
-              label={cat.charAt(0).toUpperCase() + cat.slice(1)} 
-              value={cat} 
+          {categoryOptions.map(cat => (
+            <Picker.Item
+              key={cat}
+              label={cat[0].toUpperCase() + cat.slice(1)}
+              value={cat}
             />
           ))}
         </Picker>
       </View>
 
-      {/* Ticket list or loading indicator */}
+      {/* 📋 Ticket List */}
       {loading ? (
-        <ActivityIndicator size="large" color="#000" style={{ marginTop: 20 }} />
+        <ActivityIndicator size="large" style={{ marginTop: 20 }} />
       ) : (
         <FlatList
-          data={filteredTickets}
-          keyExtractor={(item) => item.id.toString()}
+          data={tickets}
+          keyExtractor={item => item.id.toString()}
           renderItem={({ item }) => (
-            <TouchableOpacity style={styles.ticketItem} onPress={() => handleTicketPress(item.id)}>
-              <Text style={styles.ticketTitle}>{item.title}</Text>
-              <Text style={styles.ticketMeta}>
-                Status: {item.status} | Category: {item.category} | Date: { new Date(item.created_at).toLocaleDateString() }
-              </Text>
-            </TouchableOpacity>
+            <TicketRow ticket={item} onPress={id => router.push(`/ticket-detail/${id}`)} />
           )}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+          ListEmptyComponent={
+            <Text style={styles.emptyText}>No tickets found.</Text>
+          }
         />
       )}
 
-      {/* Toast component for global messages */}
       <Toast />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-    backgroundColor: '#fff',
-  },
-  filterRow: {
-    flexDirection: 'row',
-    marginBottom: 12,
-  },
-  picker: {
-    flex: 1,
+  container: { flex: 1, padding: 16, backgroundColor: '#fff' },
+  searchInput: {
     height: 40,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    marginBottom: 12,
+    backgroundColor: '#f9f9f9',
   },
-  pickerLeft: {
-    marginRight: 8,
-  },
-  pickerRight: {
-    marginLeft: 8,
-  },
-  ticketItem: {
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
-  },
-  ticketTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  ticketMeta: {
-    marginTop: 4,
-    fontSize: 14,
-    color: '#555',
-  },
+  filterRow: { flexDirection: 'row', marginBottom: 12 },
+  picker: { flex: 1, height: 40 },
+  pickerLeft: { marginRight: 8 },
+  pickerRight: { marginLeft: 8 },
+  ticketItem: { paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#ccc' },
+  ticketTitle: { fontSize: 16, fontWeight: '600' },
+  ticketMeta: { marginTop: 4, fontSize: 14, color: '#555' },
   accessDeniedText: {
     marginTop: 50,
     textAlign: 'center',
@@ -165,4 +193,5 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: 'crimson',
   },
+  emptyText: { textAlign: 'center', marginTop: 40, fontSize: 16, color: '#777' },
 });

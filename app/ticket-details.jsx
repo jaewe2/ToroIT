@@ -7,6 +7,8 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Colors } from '@/constants/Colors';
+import { useAuth } from './auth-context';
+import DropDownPicker from 'react-native-dropdown-picker';
 
 export default function TicketDetails() {
   const { id } = useLocalSearchParams();
@@ -16,6 +18,16 @@ export default function TicketDetails() {
   const [newComment, setNewComment] = useState('');
   const [formState, setFormState] = useState({ title: '', category: '', description: '' });
   const theme = useColorScheme() === 'dark' ? Colors.dark : Colors.light;
+  const { token } = useAuth();
+
+  const [open, setOpen] = useState(false);
+  const categoryOptions = [
+    { label: '🧑‍💻 Login Issue', value: 'Login Issue' },
+    { label: '💻 Software Bug', value: 'Software Bug' },
+    { label: '📶 Network Problem', value: 'Network Problem' },
+    { label: '🔐 Access Request', value: 'Access Request' },
+    { label: '🖨️ Printer Issue', value: 'Printer Issue' },
+  ];
 
   useEffect(() => {
     fetchTicket();
@@ -23,13 +35,21 @@ export default function TicketDetails() {
 
   const fetchTicket = async () => {
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/tickets/${id}/`);
+      const res = await fetch(`http://127.0.0.1:8000/api/tickets/${id}/`, {
+        headers: {
+          'Authorization': `Token ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
       const data = await res.json();
+      console.log('Fetched ticket:', data);
+
       setTicket(data);
       setFormState({
-        title: data.title,
-        category: data.category,
-        description: data.description,
+        title: data.title || '',
+        category: data.category || '',
+        description: data.description || '',
       });
     } catch (err) {
       console.error('Failed to load ticket:', err);
@@ -41,7 +61,10 @@ export default function TicketDetails() {
     try {
       const res = await fetch(`http://127.0.0.1:8000/api/tickets/${id}/comment/`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Token ${token}`
+        },
         body: JSON.stringify({ text: newComment, author: 'You' }),
       });
       if (res.ok) {
@@ -54,39 +77,55 @@ export default function TicketDetails() {
   };
 
   const handleSaveEdits = async () => {
+    const { title, category, description } = formState;
+
+    if (!title.trim() || !category.trim() || !description.trim()) {
+      Alert.alert('Error', 'Please fill in all fields.');
+      return;
+    }
+
     try {
       const res = await fetch(`http://127.0.0.1:8000/api/tickets/${id}/`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formState),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Token ${token}`
+        },
+        body: JSON.stringify({ title, category, description }),
       });
+
       if (res.ok) {
+        Alert.alert('Success', 'Ticket updated!');
         setEditMode(false);
         fetchTicket();
+      } else {
+        const body = await res.text();
+        console.error('Update failed:', body);
+        Alert.alert('Update failed', body);
       }
     } catch (err) {
       console.error('Failed to update ticket:', err);
+      Alert.alert('Error', err.message);
     }
   };
 
   const handleDelete = async () => {
     const confirmed = window.confirm('Are you sure you want to delete this ticket?');
     if (!confirmed) return;
-  
+
     try {
-      console.log('Sending DELETE to:', `http://127.0.0.1:8000/api/tickets/${id}/`);
       const res = await fetch(`http://127.0.0.1:8000/api/tickets/${id}/`, {
         method: 'DELETE',
         headers: {
-          'X-User-Role': 'admin',
+          'Authorization': `Token ${token}`,
           'Content-Type': 'application/json',
         },
       });
-  
-      console.log('Status:', res.status);
+
       const body = await res.text();
+      console.log('Status:', res.status);
       console.log('Response:', body);
-  
+
       if (res.status === 204) {
         alert('Ticket deleted successfully');
         router.replace('/tickets');
@@ -98,7 +137,6 @@ export default function TicketDetails() {
       alert('Error deleting ticket: ' + err.message);
     }
   };
-  
 
   if (!ticket) {
     return (
@@ -114,22 +152,48 @@ export default function TicketDetails() {
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
           {editMode ? (
             <>
+              <Text style={[styles.sectionHeader, { color: theme.text }]}>Title</Text>
               <TextInput
                 value={formState.title}
                 onChangeText={(text) => setFormState((prev) => ({ ...prev, title: text }))}
                 style={[styles.input, { color: theme.text, borderColor: theme.inputBorder, backgroundColor: theme.card }]}
               />
-              <TextInput
+
+              <Text style={[styles.sectionHeader, { color: theme.text }]}>Category</Text>
+              <DropDownPicker
+                open={open}
                 value={formState.category}
-                onChangeText={(text) => setFormState((prev) => ({ ...prev, category: text }))}
-                style={[styles.input, { color: theme.text, borderColor: theme.inputBorder, backgroundColor: theme.card }]}
+                items={categoryOptions}
+                setOpen={setOpen}
+                setValue={(callback) =>
+                  setFormState((prev) => ({
+                    ...prev,
+                    category: callback(prev.category),
+                  }))
+                }
+                setItems={() => {}}
+                style={{
+                  borderColor: theme.inputBorder,
+                  backgroundColor: theme.card,
+                  marginBottom: 10,
+                }}
+                textStyle={{ color: theme.text }}
+                placeholder="Select a category"
+                dropDownContainerStyle={{
+                  backgroundColor: theme.card,
+                  borderColor: theme.inputBorder,
+                }}
+                zIndex={1000}
               />
+
+              <Text style={[styles.sectionHeader, { color: theme.text }]}>Description</Text>
               <TextInput
                 value={formState.description}
                 multiline
                 onChangeText={(text) => setFormState((prev) => ({ ...prev, description: text }))}
                 style={[styles.input, { color: theme.text, borderColor: theme.inputBorder, backgroundColor: theme.card, minHeight: 100 }]}
               />
+
               <TouchableOpacity style={[styles.button, { backgroundColor: theme.primary }]} onPress={handleSaveEdits}>
                 <Text style={styles.buttonText}>Save Changes</Text>
               </TouchableOpacity>
@@ -139,7 +203,9 @@ export default function TicketDetails() {
               <Text style={[styles.title, { color: theme.primary }]}>{ticket.title}</Text>
               <Text style={[styles.meta, { color: theme.textSecondary }]}>Status: {ticket.status}</Text>
               <Text style={[styles.meta, { color: theme.textSecondary }]}>Category: {ticket.category}</Text>
-              <Text style={[styles.meta, { color: theme.textSecondary }]}>Submitted: {ticket.submitted_at}</Text>
+              <Text style={[styles.meta, { color: theme.textSecondary }]}>
+                Submitted: {new Date(ticket.submitted_at).toLocaleString()}
+              </Text>
 
               <Text style={[styles.sectionHeader, { color: theme.text }]}>Description</Text>
               <Text style={[styles.description, { color: theme.text, backgroundColor: theme.card }]}>
@@ -161,7 +227,7 @@ export default function TicketDetails() {
             <View key={c.id} style={[styles.commentCard, { backgroundColor: theme.card }]}>
               <Text style={[styles.commentAuthor, { color: theme.text }]}>{c.author}</Text>
               <Text style={[styles.commentText, { color: theme.text }]}>{c.text}</Text>
-              <Text style={[styles.commentTime, { color: theme.textSecondary }]}>{c.created_at}</Text>
+              <Text style={[styles.commentTime, { color: theme.textSecondary }]}>{new Date(c.created_at).toLocaleString()}</Text>
             </View>
           ))}
 
@@ -191,7 +257,7 @@ export default function TicketDetails() {
           <Text style={[styles.sectionHeader, { color: theme.text }]}>History</Text>
           {(ticket.history || []).map((h) => (
             <Text key={h.id} style={[styles.meta, { color: theme.textSecondary }]}>
-              {h.change} • {h.date}
+              {h.change} • {new Date(h.date).toLocaleString()}
             </Text>
           ))}
         </ScrollView>
@@ -231,3 +297,4 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 });
+
