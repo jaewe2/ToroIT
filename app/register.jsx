@@ -39,6 +39,8 @@ export default function Register() {
 
   const checkAndSetUsername = useCallback(
     debounce(async (email) => {
+      if (!email || !email.includes('@')) return;
+
       const prefix = email.split('@')[0].slice(0, 4);
       if (!prefix) return;
 
@@ -104,123 +106,127 @@ export default function Register() {
         validationSchema={RegisterSchema}
         onSubmit={handleRegisterSubmit}
       >
-        {({
-          handleChange,
-          handleBlur,
-          handleSubmit,
-          values,
-          errors,
-          touched,
-          setFieldValue,
-          isSubmitting,
-        }) => (
-          <>
-            <View style={styles.form}>
-              {/* Email */}
-              <TextInput
-                style={[styles.input, { borderColor: theme.inputBorder, color: theme.text }]}
-                placeholder="CSUDH Email"
-                placeholderTextColor={theme.textSecondary}
-                value={values.email}
-                onChangeText={(text) => {
-                  setFieldValue('email', text);
-                  checkAndSetUsername(text);
-                }}
-                onBlur={handleBlur('email')}
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-              {touched.email && errors.email && (
-                <Text style={styles.error}>{errors.email}</Text>
-              )}
+        {(formikProps) => {
+          const {
+            handleChange,
+            handleBlur,
+            handleSubmit,
+            values,
+            errors,
+            touched,
+            setFieldValue,
+            isSubmitting,
+          } = formikProps;
 
-              {/* Username Preview */}
-              {username ? (
-                <View
-                  style={[
-                    styles.usernameBox,
-                    { borderColor: theme.primary, backgroundColor: theme.card },
-                  ]}
-                >
-                  <Text style={[styles.usernameLabel, { color: theme.primary }]}>
-                    Your Toro Username:
-                  </Text>
-                  <Text style={[styles.usernameValue, { color: theme.secondary }]}>
-                    {username}
-                  </Text>
-                  {checking && (
-                    <Text style={styles.usernameChecking}>Checking availability...</Text>
-                  )}
-                </View>
-              ) : null}
-
-              {/* Password */}
-              <TextInput
-                style={[styles.input, { borderColor: theme.inputBorder, color: theme.text }]}
-                placeholder="Password"
-                placeholderTextColor={theme.textSecondary}
-                value={values.password}
-                onChangeText={handleChange('password')}
-                onBlur={handleBlur('password')}
-                secureTextEntry={!showPassword}
-              />
-              <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                <Text style={{ color: theme.secondary, marginBottom: 8 }}>
-                  {showPassword ? 'Hide' : 'Show'} Password
-                </Text>
-              </TouchableOpacity>
-              {touched.password && errors.password && (
-                <Text style={styles.error}>{errors.password}</Text>
-              )}
-
-              {/* Confirm Password */}
-              <TextInput
-                style={[styles.input, { borderColor: theme.inputBorder, color: theme.text }]}
-                placeholder="Confirm Password"
-                placeholderTextColor={theme.textSecondary}
-                value={values.confirmPassword}
-                onChangeText={handleChange('confirmPassword')}
-                onBlur={handleBlur('confirmPassword')}
-                secureTextEntry={!showConfirm}
-              />
-              <TouchableOpacity onPress={() => setShowConfirm(!showConfirm)}>
-                <Text style={{ color: theme.secondary, marginBottom: 8 }}>
-                  {showConfirm ? 'Hide' : 'Show'} Confirm Password
-                </Text>
-              </TouchableOpacity>
-              {touched.confirmPassword && errors.confirmPassword && (
-                <Text style={styles.error}>{errors.confirmPassword}</Text>
-              )}
-
-              {/* Register Button */}
-              <TouchableOpacity
-                style={[styles.button, { backgroundColor: theme.primary }]}
-                onPress={handleSubmit}
-                disabled={isSubmitting || !username || checking}
-              >
-                {isSubmitting ? (
-                  <ActivityIndicator size="small" color="#fff" />
-                ) : (
-                  <Text style={styles.buttonText}>Register</Text>
+          return (
+            <>
+              <View style={styles.form}>
+                {/* Email */}
+                <TextInput
+                  style={[styles.input, { borderColor: theme.inputBorder, color: theme.text }]}
+                  placeholder="CSUDH Email"
+                  placeholderTextColor={theme.textSecondary}
+                  value={values.email}
+                  onChangeText={(text) => {
+                    setFieldValue('email', text);
+                    checkAndSetUsername(text);
+                  }}
+                  onBlur={handleBlur('email')}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+                {touched.email && errors.email && (
+                  <Text style={styles.error}>{errors.email}</Text>
                 )}
-              </TouchableOpacity>
 
-              <TouchableOpacity onPress={() => router.replace('/')} style={styles.link}>
-                <Text style={[styles.linkText, { color: theme.secondary }]}>Back to Login</Text>
-              </TouchableOpacity>
-            </View>
+                {/* Username Preview */}
+                {username ? (
+                  <View
+                    style={[
+                      styles.usernameBox,
+                      { borderColor: theme.primary, backgroundColor: theme.card },
+                    ]}
+                  >
+                    <Text style={[styles.usernameLabel, { color: theme.primary }]}>
+                      Your Toro Username:
+                    </Text>
+                    <Text style={[styles.usernameValue, { color: theme.secondary }]}>
+                      {username}
+                    </Text>
+                    {checking && (
+                      <Text style={styles.usernameChecking}>Checking availability...</Text>
+                    )}
+                  </View>
+                ) : null}
 
-            {/* Full-screen loading overlay */}
-            {isSubmitting && (
-              <View style={styles.loadingOverlay}>
-                <ActivityIndicator size="large" color={theme.primary} />
-                <Text style={{ color: theme.text, marginTop: 10 }}>
-                  Creating your account...
-                </Text>
+                {/* Password */}
+                <TextInput
+                  style={[styles.input, { borderColor: theme.inputBorder, color: theme.text }]}
+                  placeholder="Password"
+                  placeholderTextColor={theme.textSecondary}
+                  value={values.password}
+                  onChangeText={handleChange('password')}
+                  onBlur={handleBlur('password')}
+                  secureTextEntry={!showPassword}
+                />
+                <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                  <Text style={{ color: theme.secondary, marginBottom: 8 }}>
+                    {showPassword ? 'Hide' : 'Show'} Password
+                  </Text>
+                </TouchableOpacity>
+                {touched.password && errors.password && (
+                  <Text style={styles.error}>{errors.password}</Text>
+                )}
+
+                {/* Confirm Password */}
+                <TextInput
+                  style={[styles.input, { borderColor: theme.inputBorder, color: theme.text }]}
+                  placeholder="Confirm Password"
+                  placeholderTextColor={theme.textSecondary}
+                  value={values.confirmPassword}
+                  onChangeText={handleChange('confirmPassword')}
+                  onBlur={handleBlur('confirmPassword')}
+                  secureTextEntry={!showConfirm}
+                />
+                <TouchableOpacity onPress={() => setShowConfirm(!showConfirm)}>
+                  <Text style={{ color: theme.secondary, marginBottom: 8 }}>
+                    {showConfirm ? 'Hide' : 'Show'} Confirm Password
+                  </Text>
+                </TouchableOpacity>
+                {touched.confirmPassword && errors.confirmPassword && (
+                  <Text style={styles.error}>{errors.confirmPassword}</Text>
+                )}
+
+                {/* Register Button */}
+                <TouchableOpacity
+                  style={[styles.button, { backgroundColor: theme.primary }]}
+                  onPress={handleSubmit}
+                  disabled={isSubmitting || !username || checking}
+                >
+                  {isSubmitting ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <Text style={styles.buttonText}>Register</Text>
+                  )}
+                </TouchableOpacity>
+
+                <TouchableOpacity onPress={() => router.replace('/')} style={styles.link}>
+                  <Text style={[styles.linkText, { color: theme.secondary }]}>Back to Login</Text>
+                </TouchableOpacity>
               </View>
-            )}
-          </>
-        )}
+
+              {/* Safe loading overlay outside render variation */}
+              {isSubmitting && (
+                <View style={styles.loadingOverlay}>
+                  <ActivityIndicator size="large" color={theme.primary} />
+                  <Text style={{ color: theme.text, marginTop: 10 }}>
+                    Creating your account...
+                  </Text>
+                </View>
+              )}
+            </>
+          );
+        }}
       </Formik>
     </View>
   );
