@@ -17,6 +17,7 @@ export default function TicketDetails() {
   const [editMode, setEditMode] = useState(false);
   const [newComment, setNewComment] = useState('');
   const [formState, setFormState] = useState({ title: '', category: '', description: '' });
+  const [aiSuggestion, setAiSuggestion] = useState(null); // 🧠 New AI suggestion state
   const theme = useColorScheme() === 'dark' ? Colors.dark : Colors.light;
   const { token } = useAuth();
 
@@ -43,16 +44,39 @@ export default function TicketDetails() {
       });
 
       const data = await res.json();
-      console.log('Fetched ticket:', data);
-
       setTicket(data);
       setFormState({
         title: data.title || '',
         category: data.category || '',
         description: data.description || '',
       });
+
+      fetchAISuggestion(data); // ⬅️ AI suggestion fetch
     } catch (err) {
       console.error('Failed to load ticket:', err);
+    }
+  };
+
+  const fetchAISuggestion = async (ticketData) => {
+    try {
+      const res = await fetch('http://127.0.0.1:8000/api/ai-suggest/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Token ${token}`,
+        },
+        body: JSON.stringify({
+          title: ticketData.title,
+          category: ticketData.category,
+          description: ticketData.description,
+        }),
+      });
+      const data = await res.json();
+      if (data.suggestion) {
+        setAiSuggestion(data.suggestion);
+      }
+    } catch (err) {
+      console.error('Failed to fetch AI suggestion:', err);
     }
   };
 
@@ -123,9 +147,6 @@ export default function TicketDetails() {
       });
 
       const body = await res.text();
-      console.log('Status:', res.status);
-      console.log('Response:', body);
-
       if (res.status === 204) {
         alert('Ticket deleted successfully');
         router.replace('/tickets');
@@ -150,6 +171,13 @@ export default function TicketDetails() {
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+          {!editMode && aiSuggestion && (
+            <View style={[styles.suggestionCard, { backgroundColor: theme.card }]}>
+              <Text style={[styles.sectionHeader, { color: theme.primary }]}>💡 Suggested Resolution</Text>
+              <Text style={[styles.suggestionText, { color: theme.text }]}>{aiSuggestion}</Text>
+            </View>
+          )}
+
           {editMode ? (
             <>
               <Text style={[styles.sectionHeader, { color: theme.text }]}>Title</Text>
@@ -296,5 +324,16 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontSize: 16,
   },
+  suggestionCard: {
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#ccc',
+  },
+  suggestionText: {
+    fontSize: 15,
+    marginTop: 8,
+    lineHeight: 20,
+  },
 });
-
