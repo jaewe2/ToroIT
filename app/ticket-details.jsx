@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView,
@@ -17,9 +18,9 @@ export default function TicketDetails() {
   const [editMode, setEditMode] = useState(false);
   const [newComment, setNewComment] = useState('');
   const [formState, setFormState] = useState({ title: '', category: '', description: '' });
-  const [aiSuggestion, setAiSuggestion] = useState(null); // 🧠 New AI suggestion state
+  const [aiSuggestion, setAiSuggestion] = useState(null);
   const theme = useColorScheme() === 'dark' ? Colors.dark : Colors.light;
-  const { token } = useAuth();
+  const { token, user } = useAuth();
 
   const [open, setOpen] = useState(false);
   const categoryOptions = [
@@ -51,7 +52,7 @@ export default function TicketDetails() {
         description: data.description || '',
       });
 
-      fetchAISuggestion(data); // ⬅️ AI suggestion fetch
+      fetchAISuggestion(data);
     } catch (err) {
       console.error('Failed to load ticket:', err);
     }
@@ -200,17 +201,10 @@ export default function TicketDetails() {
                   }))
                 }
                 setItems={() => {}}
-                style={{
-                  borderColor: theme.inputBorder,
-                  backgroundColor: theme.card,
-                  marginBottom: 10,
-                }}
+                style={{ borderColor: theme.inputBorder, backgroundColor: theme.card, marginBottom: 10 }}
                 textStyle={{ color: theme.text }}
                 placeholder="Select a category"
-                dropDownContainerStyle={{
-                  backgroundColor: theme.card,
-                  borderColor: theme.inputBorder,
-                }}
+                dropDownContainerStyle={{ backgroundColor: theme.card, borderColor: theme.inputBorder }}
                 zIndex={1000}
               />
 
@@ -231,19 +225,12 @@ export default function TicketDetails() {
               <Text style={[styles.title, { color: theme.primary }]}>{ticket.title}</Text>
               <Text style={[styles.meta, { color: theme.textSecondary }]}>Status: {ticket.status}</Text>
               <Text style={[styles.meta, { color: theme.textSecondary }]}>Category: {ticket.category}</Text>
-              <Text style={[styles.meta, { color: theme.textSecondary }]}>
-                Submitted: {new Date(ticket.submitted_at).toLocaleString()}
-              </Text>
-
+              <Text style={[styles.meta, { color: theme.textSecondary }]}>Submitted: {new Date(ticket.submitted_at).toLocaleString()}</Text>
               <Text style={[styles.sectionHeader, { color: theme.text }]}>Description</Text>
-              <Text style={[styles.description, { color: theme.text, backgroundColor: theme.card }]}>
-                {ticket.description}
-              </Text>
-
+              <Text style={[styles.description, { color: theme.text, backgroundColor: theme.card }]}>{ticket.description}</Text>
               <TouchableOpacity onPress={() => setEditMode(true)} style={[styles.button, { backgroundColor: theme.secondary }]}>
                 <Text style={styles.buttonText}>Edit Ticket</Text>
               </TouchableOpacity>
-
               <TouchableOpacity onPress={handleDelete} style={[styles.button, { backgroundColor: '#C62828' }]}>
                 <Text style={styles.buttonText}>Delete Ticket</Text>
               </TouchableOpacity>
@@ -264,30 +251,27 @@ export default function TicketDetails() {
             onChangeText={setNewComment}
             placeholder="Add a comment..."
             placeholderTextColor={theme.textSecondary}
-            style={[
-              styles.input,
-              {
-                borderColor: theme.inputBorder,
-                backgroundColor: theme.card,
-                color: theme.text,
-              },
-            ]}
+            style={[styles.input, { borderColor: theme.inputBorder, backgroundColor: theme.card, color: theme.text }]}
             multiline
           />
 
-          <TouchableOpacity
-            style={[styles.button, { backgroundColor: theme.primary }]}
-            onPress={handleAddComment}
-          >
+          <TouchableOpacity style={[styles.button, { backgroundColor: theme.primary }]} onPress={handleAddComment}>
             <Text style={styles.buttonText}>Add Comment</Text>
           </TouchableOpacity>
 
           <Text style={[styles.sectionHeader, { color: theme.text }]}>History</Text>
           {(ticket.history || []).map((h) => (
-            <Text key={h.id} style={[styles.meta, { color: theme.textSecondary }]}>
-              {h.change} • {new Date(h.date).toLocaleString()}
-            </Text>
+            <Text key={h.id} style={[styles.meta, { color: theme.textSecondary }]}> {h.change} • {new Date(h.date).toLocaleString()}</Text>
           ))}
+
+          {user?.role === 'admin' && (
+            <TouchableOpacity
+              style={[styles.button, { backgroundColor: '#6A1B9A' }]}
+              onPress={() => router.push('/AdminTickets')}
+            >
+              <Text style={styles.buttonText}>← Back to All Tickets</Text>
+            </TouchableOpacity>
+          )}
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -305,35 +289,9 @@ const styles = StyleSheet.create({
   commentAuthor: { fontWeight: '600', marginBottom: 4 },
   commentText: { fontSize: 14, marginBottom: 4 },
   commentTime: { fontSize: 12 },
-  input: {
-    borderWidth: 2,
-    borderRadius: 10,
-    padding: 12,
-    marginTop: 20,
-    textAlignVertical: 'top',
-    minHeight: 60,
-  },
-  button: {
-    marginTop: 12,
-    padding: 14,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 16,
-  },
-  suggestionCard: {
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#ccc',
-  },
-  suggestionText: {
-    fontSize: 15,
-    marginTop: 8,
-    lineHeight: 20,
-  },
+  input: { borderWidth: 2, borderRadius: 10, padding: 12, marginTop: 20, textAlignVertical: 'top', minHeight: 60 },
+  button: { marginTop: 12, padding: 14, borderRadius: 10, alignItems: 'center' },
+  buttonText: { color: '#fff', fontWeight: '600', fontSize: 16 },
+  suggestionCard: { padding: 16, borderRadius: 12, marginBottom: 16, borderWidth: 1, borderColor: '#ccc' },
+  suggestionText: { fontSize: 15, marginTop: 8, lineHeight: 20 },
 });
