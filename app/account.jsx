@@ -7,17 +7,22 @@ import {
   useColorScheme,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { useAuth } from './auth-context';
 import { Colors } from '@/constants/Colors';
 
 export default function Account() {
   const { user, logout } = useAuth();
+  const router = useRouter();
   const colorScheme = useColorScheme();
   const theme = colorScheme === 'dark' ? Colors.dark : Colors.light;
 
   const handleLogout = () => {
-    console.log('Logout button pressed');
-    logout(); // Directly call logout (make sure this is working in auth-context)
+    logout();
+  };
+
+  const handleGoToAdmin = () => {
+    router.push('/admin-dashboard');   // << Make sure file is app/admin-dashboard.jsx
   };
 
   return (
@@ -35,6 +40,22 @@ export default function Account() {
             <Text style={[styles.label, { color: theme.textSecondary }]}>Username</Text>
             <Text style={[styles.info, { color: theme.text }]}>{user.username}</Text>
           </View>
+
+          <View style={styles.infoBox}>
+            <Text style={[styles.label, { color: theme.textSecondary }]}>Role</Text>
+            <View style={styles.roleBadge}>
+              <Text style={{ color: '#000', fontWeight: 'bold' }}>{user.role}</Text>
+            </View>
+          </View>
+
+          {user.role === 'admin' && (
+            <TouchableOpacity
+              style={[styles.button, { backgroundColor: theme.primary }]}
+              onPress={handleGoToAdmin}
+            >
+              <Text style={styles.buttonText}>Go to Admin Dashboard</Text>
+            </TouchableOpacity>
+          )}
 
           <TouchableOpacity
             style={[
@@ -84,6 +105,18 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 40,
   },
+  button: {
+    paddingVertical: 14,
+    paddingHorizontal: 18,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  buttonText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 16,
+  },
   logoutButton: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -97,5 +130,13 @@ const styles = StyleSheet.create({
   logoutText: {
     fontSize: 16,
     fontWeight: '600',
+  },
+  roleBadge: {
+    backgroundColor: '#FFC107',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+    marginTop: 4,
   },
 });

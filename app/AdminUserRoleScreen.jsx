@@ -1,3 +1,5 @@
+// app/admin-user-role.jsx
+
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
@@ -10,6 +12,7 @@ import {
   TextInput,
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
+import Toast from 'react-native-toast-message';
 import { useAuth } from './auth-context';
 
 const API_URL = 'http://127.0.0.1:8000/api';
@@ -22,7 +25,9 @@ export default function AdminUserRoleScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [roleUpdates, setRoleUpdates] = useState({});
 
+  // Fetch the list of users
   const fetchUsers = useCallback(async () => {
+    setLoading(true);
     try {
       const res = await fetch(`${API_URL}/users/`, {
         headers: { Authorization: `Token ${token}` },
@@ -31,21 +36,50 @@ export default function AdminUserRoleScreen() {
       setUsers(data);
       setFilteredUsers(data);
     } catch (err) {
-      console.error('Failed to load users:', err);
+      Toast.show({ type: 'error', text1: 'Error', text2: 'Failed to load users.' });
     } finally {
       setLoading(false);
     }
   }, [token]);
 
+  // Initial load (admins only)
+  useEffect(() => {
+    if (user?.role === 'admin') {
+      fetchUsers();
+    }
+  }, [fetchUsers, user]);
+
+  // Filter users as the search query changes
+  useEffect(() => {
+    const lower = searchQuery.toLowerCase();
+    setFilteredUsers(
+      users.filter(
+        u =>
+          u.username.toLowerCase().includes(lower) ||
+          u.email?.toLowerCase().includes(lower)
+      )
+    );
+  }, [searchQuery, users]);
+
+  // Track selection of a new role per user
   const handleRoleChange = (userId, newRole) => {
-    setRoleUpdates((prev) => ({ ...prev, [userId]: newRole }));
+    setRoleUpdates(prev => ({ ...prev, [userId]: newRole }));
   };
 
-  const confirmUpdate = (userId) => {
+  // Show confirmation before sending the PATCH
+  const confirmUpdate = userId => {
     const newRole = roleUpdates[userId];
+    const currentRole = users.find(u => u.id === userId)?.role;
+    if (!newRole || newRole === currentRole) {
+      return Toast.show({
+        type: 'info',
+        text1: 'No change',
+        text2: 'Please select a different role first.',
+      });
+    }
     Alert.alert(
       'Confirm Role Change',
-      `Change this user's role to "${newRole}"?`,
+      `Change role for user #${userId} to "${newRole}"?`,
       [
         { text: 'Cancel', style: 'cancel' },
         { text: 'Update', onPress: () => updateUserRole(userId) },
@@ -53,50 +87,49 @@ export default function AdminUserRoleScreen() {
     );
   };
 
-  const updateUserRole = async (userId) => {
+  // Send PATCH to /api/users/<userId>/
+  const updateUserRole = async userId => {
     try {
-      const res = await fetch(`${API_URL}/users/update-role/`, {
-        method: 'POST',
+      const res = await fetch(`${API_URL}/users/${userId}/`, {
+        method: 'PATCH',
         headers: {
           Authorization: `Token ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          user_id: userId,
-          role: roleUpdates[userId],
-        }),
+        body: JSON.stringify({ role: roleUpdates[userId] }),
       });
 
       if (res.ok) {
-        fetchUsers();
-        Alert.alert('Success', 'User role updated.');
+        await fetchUsers();
+        Toast.show({
+          type: 'success',
+          text1: 'Success',
+          text2: `Role updated to "${roleUpdates[userId]}"`,
+        });
+        // clear selection so Picker resets
+        setRoleUpdates(prev => {
+          const copy = { ...prev };
+          delete copy[userId];
+          return copy;
+        });
       } else {
         const error = await res.json();
-        console.error('Update failed:', error);
-        Alert.alert('Error', error?.detail || 'Role update failed');
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: error.detail || 'Role update failed.',
+        });
       }
     } catch (err) {
-      console.error('Update error:', err);
-      Alert.alert('Error', 'An unexpected error occurred.');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Unexpected error occurred.',
+      });
     }
   };
 
-  useEffect(() => {
-    if (user?.role === 'admin') {
-      fetchUsers();
-    }
-  }, [fetchUsers]);
-
-  useEffect(() => {
-    const lowerQuery = searchQuery.toLowerCase();
-    const filtered = users.filter(
-      (u) =>
-        u.username.toLowerCase().includes(lowerQuery) ||
-        (u.email && u.email.toLowerCase().includes(lowerQuery))
-    );
-    setFilteredUsers(filtered);
-  }, [searchQuery, users]);
-
+  // Block non-admins
   if (user?.role !== 'admin') {
     return (
       <View style={styles.centered}>
@@ -105,6 +138,7 @@ export default function AdminUserRoleScreen() {
     );
   }
 
+  // Show loading spinner
   if (loading) {
     return (
       <View style={styles.centered}>
@@ -120,14 +154,14 @@ export default function AdminUserRoleScreen() {
       <TextInput
         style={styles.searchInput}
         placeholder="Search by username or email"
+        placeholderTextColor="#999"
         value={searchQuery}
         onChangeText={setSearchQuery}
-        placeholderTextColor="#999"
       />
 
       <FlatList
         data={filteredUsers}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={item => item.id.toString()}
         contentContainerStyle={{ paddingBottom: 24 }}
         ListEmptyComponent={
           <Text style={styles.noUsersText}>No users found.</Text>
@@ -139,7 +173,7 @@ export default function AdminUserRoleScreen() {
 
             <Picker
               selectedValue={roleUpdates[item.id] || item.role}
-              onValueChange={(value) => handleRoleChange(item.id, value)}
+              onValueChange={value => handleRoleChange(item.id, value)}
               style={styles.picker}
               dropdownIconColor="#333"
             >
@@ -157,6 +191,9 @@ export default function AdminUserRoleScreen() {
           </View>
         )}
       />
+
+      {/* Toast fallback */}
+      <Toast />
     </View>
   );
 }
@@ -164,9 +201,8 @@ export default function AdminUserRoleScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 16,
-    paddingTop: 20,
-    backgroundColor: '#F9FAFB',
+    padding: 16,
+    backgroundColor: '#fff',
   },
   centered: {
     flex: 1,
@@ -174,72 +210,65 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   error: {
-    color: '#FF3B30',
+    color: '#C62828',
     fontSize: 16,
     fontWeight: '500',
   },
   header: {
-    fontSize: 26,
-    fontWeight: '700',
-    color: '#111827',
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#111',
     textAlign: 'center',
-    marginBottom: 20,
+    marginBottom: 12,
   },
   searchInput: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
-    borderColor: '#E5E7EB',
+    height: 40,
+    borderColor: '#ccc',
     borderWidth: 1,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    fontSize: 16,
-    marginBottom: 20,
-    color: '#111827',
+    borderRadius: 8,
+    backgroundColor: '#f9f9f9',
+    paddingHorizontal: 10,
+    marginBottom: 12,
+    color: '#111',
   },
   card: {
-    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
     padding: 16,
-    marginBottom: 16,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 3,
+    marginVertical: 6,
+    backgroundColor: '#F2F2F2',
   },
   name: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#111827',
+    color: '#111',
   },
   role: {
     fontSize: 14,
-    color: '#6B7280',
+    color: '#333',
     marginVertical: 8,
   },
   picker: {
-    backgroundColor: '#F3F4F6',
-    marginVertical: 4,
-    borderRadius: 8,
-    overflow: 'hidden',
     height: 40,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 8,
+    backgroundColor: '#f9f9f9',
+    marginBottom: 12,
   },
   updateButton: {
-    marginTop: 12,
-    backgroundColor: '#2563EB',
-    paddingVertical: 10,
-    borderRadius: 8,
+    marginTop: 8,
     alignItems: 'center',
   },
   updateButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '600',
     fontSize: 16,
+    fontWeight: '500',
+    color: '#007AFF',
   },
   noUsersText: {
     textAlign: 'center',
+    marginTop: 40,
     fontSize: 16,
-    color: '#6B7280',
-    marginTop: 30,
+    color: '#777',
   },
 });
+
